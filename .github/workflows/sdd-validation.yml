@@ -1,0 +1,32 @@
+# Scaffold de CI para reforzar el proceso SDD en cada PR (shift-left a tiempo de PR).
+# El job `validate-sdd` funciona TAL CUAL (solo necesita sh). El job de build/test
+# está comentado: descomentalo y completá los {{...}} con los comandos reales de tu
+# stack. Si no usás GitHub Actions, replicá la misma idea en tu CI: correr el
+# validador determinístico + tus gates de build/test en cada PR.
+name: sdd-validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate-sdd:
+    name: Validador determinístico de artefactos SDD
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validar gates de proceso SDD
+        run: sh .claude/skills/validate-specs/validate-sdd.sh specs
+
+  # build-and-test:
+  #   name: Build + tests del proyecto
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # - name: Setup del runtime de tu stack (lenguaje/SDK)
+  #     #   run: ...
+  #     - name: Build
+  #       run: {{BUILD_COMMAND}}
+  #     - name: Test
+  #       run: {{TEST_COMMAND}}

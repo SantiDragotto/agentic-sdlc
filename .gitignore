@@ -1,0 +1,31 @@
+# ── Claude Code ──────────────────────────────────────────────
+# Settings locales y personales del developer (hooks de preferencia,
+# overrides). Lo committeado vive en .claude/settings.json.
+.claude/settings.local.json
+
+# ── Sistema operativo ────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Editores / IDEs ──────────────────────────────────────────
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+
+# ── Artefactos de build ──────────────────────────────────────
+# Este kit es agnóstico de stack: todavía no sabe cómo se compila tu
+# proyecto. Una vez que elijas tu stack, agregá acá los directorios y
+# archivos de build, dependencias y artefactos generados. Por ejemplo:
+#   - directorio de dependencias (ej. node_modules/, vendor/, packages/)
+#   - salida de compilación (ej. bin/, build/, dist/, obj/, target/, out/)
+#   - logs, cobertura y reportes generados (ej. *.log, coverage/)
+#   - el propio {{SECRETS_FILE}} si vive dentro del repo
+# Mantené {{SECRETS_FILE}} fuera de git pase lo que pase.
