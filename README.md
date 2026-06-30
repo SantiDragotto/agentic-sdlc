@@ -50,14 +50,9 @@ Cada fase clásica del SDLC tiene en este kit un **artefacto**, un **comando** y
 
 El principio que ordena todo el flujo: **un mismo defecto cuesta más cuanto más tarde se lo atrapa.** Una ambigüedad de requisitos que llega a producción obliga a rehacer diseño, código y tests —y a arreglar lo que ya rompió—; esa misma ambigüedad resuelta mientras se escribe la spec se corrige moviendo una línea de texto. De ahí **shift-left**: correr la verificación hacia la **izquierda** del ciclo, lo más cerca posible del origen del error.
 
-```
-Costo relativo de corregir un mismo defecto, según dónde se lo atrapa
-(ilustrativo — la cifra exacta varía entre estudios; el orden de magnitud, no):
+![Curva del costo de corregir un defecto a lo largo del ciclo SDLC: arranca barato en Idea, Spec, Plan, Tasks y Analyze (la zona barata, gates pre-código: AC+[VERIFICAR], validate-specs, /analyze) y se dispara hacia Build, Verify, Review y Prod. Los gates del kit empujan la detección a la izquierda.](./assets/shift-left.svg)
 
-  Requisitos  →   Diseño   →  Construcción  →  /verify  →  Producción
-     1x             ~5x          ~10x           ~25x         100x+
-  └─── izquierda: barato ───────────────────────── derecha: caro ───┘
-```
+> *Cifras ilustrativas: la magnitud exacta varía entre estudios, pero el orden no — atrapar el defecto una fase antes lo hace varias veces más barato de corregir. Cada gate del flujo (`AC + [VERIFICAR]`, `validate-specs`, `/analyze`, `/verify`, `bug-finder`) está puesto lo más a la izquierda posible.*
 
 Por eso el kit **no deja la verificación para el final**: cada fase tiene su propia V&V —sus **criterios de salida**— que el humano valida antes de avanzar. Es el **modelo en V**: a cada fase de la izquierda (requisitos, diseño, construcción) le corresponde una validación. Los mecanismos que empujan el control a la izquierda:
 
