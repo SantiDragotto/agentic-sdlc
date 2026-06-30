@@ -8,7 +8,66 @@ Antes de tocar nada, leé `GETTING-STARTED.md`: te dice qué tres archivos relle
 
 **agentic-sdlc** es un template agnóstico de lenguaje y **sin código** para arrancar un proyecto nuevo —de cualquier tipo: API, librería, CLI, app, servicio, lo que sea— y empezar a trabajar con Claude/IA desde el día uno bajo un flujo de **Spec-Driven Development (SDD)**. No trae stack, ni framework, ni build: trae la **maquinaria de proceso** (comandos, agentes, hooks, plantillas de spec y reglas de gobernanza) ya cableada, con marcadores `{{TOKEN}}` y bloques `[EJEMPLO — reemplazar]` para que la adaptes a tu proyecto en una tarde.
 
+---
+
+## Qué significa SDLC — y por qué se llama así
+
+**SDLC = Software Development Life Cycle** — el *ciclo de vida del desarrollo de software*: la secuencia de fases por las que pasa **todo** cambio de software, desde entender el problema hasta entregar algo que funciona y está verificado. No es un invento de este kit ni de la IA — es la forma clásica de ordenar la ingeniería de software:
+
+> **requisitos → análisis → diseño → construcción → pruebas (V&V) → entrega**
+
+Lo **"agentic"** del nombre es *cómo* se recorre ese ciclo acá: cada fase la **ejecuta un agente de IA que encarna un rol profesional** (analista de requerimientos, arquitecto, ingeniero, QA, V&V) y en **cada compuerta entre fases decide un ingeniero humano**. La regla que gobierna todo el kit:
+
+> **La IA produce en cada paso; el humano valida y decide el pasaje en cada compuerta.**
+
+Es decir: *agentic-sdlc* = el ciclo de vida de software de siempre, recorrido por agentes y con el humano como dueño de cada decisión. **SDD (Spec-Driven Development)** es la metodología concreta con la que este kit recorre ese ciclo.
+
+---
+
 El **pitch de SDD** en un párrafo: la **spec versionada en el repo es la fuente de verdad, no el prompt**. El prompt es efímero y se pierde; la spec queda en git, se revisa y se verifica. Cada **feature = una carpeta numerada** (`specs/NNN-slug/`) con su `spec.md` (comportamiento + **criterios de aceptación** verificables, true/false), su `plan.md` (el cómo) y su `tasks.md` (la checklist atómica). Y **nada está `done` hasta pasar `/verify`**, recorriendo cada criterio de aceptación uno por uno con **evidencia** (`archivo:línea` y/o comportamiento ejecutado real). Esto reemplaza el "escribo lo que quiero en un prompt y lo voy refinando": acá el detalle vive en un artefacto que se versiona, se discute y se cierra.
+
+---
+
+## El ciclo de vida, mapeado al kit
+
+Cada fase clásica del SDLC tiene en este kit un **artefacto**, un **comando** y un **agente con su rol**. Lo que cada fase *busca* es lo que la justifica — no es burocracia, es atajar el defecto donde corregirlo es barato:
+
+| Fase del SDLC | Qué busca | En el kit (artefacto · comando · agente) |
+|---|---|---|
+| **Intake / triage** | decidir si esto es una feature (→ SDD) o un fix trivial (→ ruta rápida) | gate de `CLAUDE.md` — sin artefacto |
+| **Requisitos** | entender *qué* y *por qué*; criterios **verificables**, no objetivos vagos | `spec.md` · `/spec` · `requirements-analyst` + `requirements-reviewer` |
+| **Análisis** | descomponer el problema y chequear consistencia antes de codear | `spec.md §3` + reporte de `/analyze` · `spec-analyst` |
+| **Diseño** | *cómo* se construye, qué se **reutiliza**, y la interfaz expuesta | `plan.md` · `/plan` · `solution-designer` (+ `contract.md` · `/contract`, OPCIONAL) |
+| **Construcción** | escribir el código y sus **tests obligatorios** | `tasks.md` · `/tasks` + `builder` |
+| **Pruebas / V&V** | probar que **cada criterio de aceptación** se cumple, con evidencia | `/verify` · `validator` (+ `e2e-tester`, OPCIONAL) |
+| **Entrega / cierre** | marcar `done`, actualizar `INDEX.md`, pasar el contrato a `shipped` | cierre de `/verify` |
+
+> El detalle fase por fase (estados del lifecycle, criterios de salida, quién aprueba) vive en [`specs/README.md`](./specs/README.md) — incluida la misma tabla con la columna *Etapa SDLC*. Acá te quedás con el mapa conceptual.
+
+---
+
+## La teoría: cazar el defecto lo más a la izquierda posible (*shift-left*)
+
+El principio que ordena todo el flujo: **un mismo defecto cuesta más cuanto más tarde se lo atrapa.** Una ambigüedad de requisitos que llega a producción obliga a rehacer diseño, código y tests —y a arreglar lo que ya rompió—; esa misma ambigüedad resuelta mientras se escribe la spec se corrige moviendo una línea de texto. De ahí **shift-left**: correr la verificación hacia la **izquierda** del ciclo, lo más cerca posible del origen del error.
+
+```
+Costo relativo de corregir un mismo defecto, según dónde se lo atrapa
+(ilustrativo — la cifra exacta varía entre estudios; el orden de magnitud, no):
+
+  Requisitos  →   Diseño   →  Construcción  →  /verify  →  Producción
+     1x             ~5x          ~10x           ~25x         100x+
+  └─── izquierda: barato ───────────────────────── derecha: caro ───┘
+```
+
+Por eso el kit **no deja la verificación para el final**: cada fase tiene su propia V&V —sus **criterios de salida**— que el humano valida antes de avanzar. Es el **modelo en V**: a cada fase de la izquierda (requisitos, diseño, construcción) le corresponde una validación. Los mecanismos que empujan el control a la izquierda:
+
+- **Fase 0 — des-ambiguación.** Antes de escribir una línea, el `requirements-analyst` reconstruye la intención real y resuelve ambigüedades con el humano. El defecto más barato de atajar.
+- **Protocolo `clarify` en cada fase.** Ninguna suposición material es silenciosa: lo que la IA asumiría se convierte en pregunta *antes* de avanzar.
+- **Test de ambigüedad (`requirements-reviewer`).** La V&V de la fase de requisitos: el autor de la spec no se valida a sí mismo.
+- **`/analyze` antes de codear.** Caza inconsistencias spec ↔ plan ↔ tasks cuando corregir todavía es barato (editar un MD, no refactorizar código en producción).
+- **Tests obligatorios** en construcción y **`/verify`** como compuerta **final** de Definition of Done — no como la *única* compuerta.
+
+> En una frase: cada `/comando` del flujo es una red de seguridad puesta lo más a la izquierda posible. El objetivo no es producir documentos — es **que el error aparezca en la fase donde corregirlo cuesta menos.**
 
 ---
 
