@@ -7,21 +7,24 @@ plan: ./plan.md
 # Tareas — <Título de la feature>
 
 > Checklist atómica derivada del plan, en orden de ejecución. Cada tarea referencia el/los criterio(s) de aceptación que ayuda a cumplir (trazabilidad para `/analyze` y `/verify`).
+> **Es andamio: se borra al cerrar la spec** (`CONSTITUTION.md §6`). Ningún comentario de código cita este archivo ni sus números de tarea: el código cita la regla o el criterio (`spec NNN AC3`).
 
-| # | Tarea | Archivo(s) | Cubre AC | Dep. | Estado |
-|---|---|---|---|---|---|
-| 1 | | | AC1 | | ☐ |
-| 2 | | | AC2 | | ☐ |
-| 3 | | | | | ☐ |
+| # | Tarea | Archivo(s) | Cubre AC | Test (ancla `Spec`/`AC`) | Dep. | Estado |
+|---|---|---|---|---|---|---|
+| 1 | | | AC1 | `Spec=NNN`, `AC=AC1` | | ☐ |
+| 2 | | | AC2 | `Spec=NNN`, `AC=AC2` | | ☐ |
+| 3 | | | | — | | ☐ |
 
 Estados: ☐ pendiente · ◐ en progreso · ✅ hecha
 Dep.: número(s) de tarea prerequisito, o `[P]` si la tarea puede correr en paralelo con sus hermanas (sin dependencias entre sí).
+Test: el ancla que va a llevar el test que escribe la tarea (`CONSTITUTION.md §5`), o `—` si la tarea no escribe un test.
 
 ## Cobertura
 > Toda fila de criterios de aceptación de la spec debe aparecer en al menos una tarea. Toda tarea debe mapear a un AC (si no, es scope creep → justificar o sacar). Esto lo chequea `/analyze`.
 
 ## Tests obligatorios (no omitir — ver CLAUDE.md > Testing Standards)
 > Adaptá estas categorías a tu stack y a las reglas transversales de tu `CONSTITUTION.md`. Lo importante es la cobertura, no la sintaxis.
+> Todo test que cubre un criterio **nace** con su ancla `Spec`/`AC` (`CONSTITUTION.md §5`); no se ancla después. Es la precondición del cierre.
 
 [EJEMPLO — reemplazar]
 - [ ] **Escenarios de autorización** si la operación está protegida: enumerá y cubrí cada caso relevante — permiso válido✔ · sin credenciales✗ · credencial del tipo equivocado✗ · permiso insuficiente✗ · falta el scope/tenant✗ · bypass de admin✔ · comparación case-insensitive si corresponde✔ · formato malformado✗.
@@ -32,5 +35,5 @@ Dep.: número(s) de tarea prerequisito, o `[P]` si la tarea puede correr en para
 > Se valida con /analyze ANTES de implementar.
 - [ ] Cada criterio de aceptación está cubierto por ≥1 tarea (columna 'Cubre AC').
 - [ ] Ninguna tarea huérfana (toda tarea mapea a un AC, o se justifica).
-- [ ] Las tareas de test obligatorias están incluidas.
+- [ ] Las tareas de test obligatorias están incluidas, cada una con su ancla `Spec`/`AC`.
 - [ ] `/analyze` corrió y no quedan inconsistencias sin resolver.

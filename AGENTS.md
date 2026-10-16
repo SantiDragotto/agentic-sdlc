@@ -39,6 +39,16 @@
 [EJEMPLO — reemplazar: {{TEST_COMMAND}} --filter "<nombre del test>"]
 ```
 
+### Tests de una spec
+
+Corre solo los tests anclados a una spec (`specs/CONSTITUTION.md §5`). Es el gate de `/verify` y la §8 de cada `contract.md`.
+
+```
+{{SPEC_TEST_COMMAND}}
+```
+
+`[EJEMPLO — reemplazar: dotnet test --filter "Spec=NNN" · pytest -m "spec_NNN" · mvn test -Dgroups=spec-NNN · npx vitest -t "spec-NNN"]`
+
 ### Run Locally
 
 ```
@@ -135,6 +145,7 @@ Keys relevantes (por nombre, sin valores):
 - Todo cambio de comportamiento (lógica de negocio, autorización, capa de entrada) **DEBE** incluir o actualizar tests.
 - Convención de naming: `[EJEMPLO — reemplazar: p. ej. Metodo_ResultadoEsperado_CuandoCondicion]`.
 - Categorización obligatoria: `[EJEMPLO — reemplazar: marcá cada test como Unit o Integration con el mecanismo de tu runner]`.
+- Ancla de criterio (`specs/CONSTITUTION.md §5`): un test que cubre un criterio de aceptación lleva **desde que se escribe** el número de spec y el ID del criterio, con una forma filtrable por `{{SPEC_TEST_COMMAND}}`: `[EJEMPLO — reemplazar: [Trait("Spec", "NNN")] + [Trait("AC", "ACn")] (xUnit) · @pytest.mark.spec("NNN") + @pytest.mark.ac("ACn") · @Tag("spec-NNN") + @Tag("ACn") (JUnit 5)]`. Sin ancla, `/verify` no cierra la spec.
 - Tests de integración: `[EJEMPLO — reemplazar: qué afirmar — p. ej. el código de estado Y el payload; en casos denegados, que la operación protegida NO se ejecutó]`.
 - Cobertura de autorización: `[EJEMPLO — reemplazar: para cada operación protegida, los escenarios mínimos que se deben cubrir — permiso válido, permiso faltante, tipo de credencial equivocado, formato malformado, bypass de admin, etc.]`.
 - Utilidades de test: `[EJEMPLO — reemplazar: clase(s) base / fixtures / helpers comunes y dónde viven]`.
@@ -160,7 +171,7 @@ El repo organiza su tooling de IA bajo `.claude/`. Cada carpeta tiene un `README
 |---|---|
 | `.claude/agents/` | Subagentes con contexto aislado para trabajo largo y multi-paso: `requirements-analyst` y `requirements-reviewer` (etapa Requisitos: redacción + V&V de requisitos / test de ambigüedad), `solution-designer`, `spec-analyst`, `validator`, `builder`, `e2e-tester` (este último OPCIONAL — solo si tu proyecto expone una interfaz que otros consumen). |
 | `.claude/commands/` | Slash commands del flujo SDD: `/spec`, `/plan`, `/tasks`, `/analyze`, `/verify` y `/contract` (`/contract` es OPCIONAL — ver abajo). |
-| `.claude/skills/` | Workflows estructurados invocables vía `/<name>` con herramientas restringidas (p. ej. `setup` — onboarding guiado —, `clarify` — protocolo de preguntas por fase para evitar suposiciones silenciosas —, `validate-specs` — gate determinístico del proceso SDD — y `bug-finder`). |
+| `.claude/skills/` | Workflows estructurados invocables vía `/<name>` con herramientas restringidas (p. ej. `setup` — onboarding guiado —, `clarify` — protocolo de preguntas por fase para evitar suposiciones silenciosas —, `validate-specs` — gate determinístico del proceso SDD —, `spec-sanitize` — compacta una spec `done` a la forma mínima — y `bug-finder`). |
 | `.claude/rules/` | Reglas atomizadas. Por defecto las reglas viven centralizadas en este archivo y en `CLAUDE.md` (ver el README de esa carpeta para los criterios de migración). |
 | `.claude/hooks/` | Scripts de shell que el harness ejecuta en eventos (`PreToolUse`, `PostToolUse`, etc.). Registrados en `.claude/settings.json`. |
 
@@ -169,6 +180,7 @@ El repo organiza su tooling de IA bajo `.claude/`. Cada carpeta tiene un `README
 Este repo trabaja **SDD-first**: el trabajo que dispara cualquiera de las señales de triage de `specs/CONSTITUTION.md §1` pasa por el flujo spec-driven **antes** de escribir código de feature. Los arreglos triviales/mecánicos son la única excepción.
 
 - **Modelo de artefactos** — viven bajo `specs/NNN-<slug>/`: `spec.md` (comportamiento + criterios de aceptación), `plan.md` (el cómo, reusando el hogar natural), `tasks.md` (checklist atómico, incluye los tests mandatorios). Catálogo en `specs/INDEX.md`; templates bajo `specs/TEMPLATE/`.
+- **Una spec cerrada es mínima** (`specs/CONSTITUTION.md §6`) — al pasar `/verify` quedan solo `spec.md` y `contract.md`; `plan.md`/`tasks.md` se borran (skill `spec-sanitize --cierre`). El código cita la regla o el criterio (`spec NNN AC3`), nunca `plan.md`/`tasks.md`, y ningún archivo vivo linkea historia (archivos borrados, commits, tags).
 - **Contract-first (OPCIONAL)** — `contract.md` y el agente `e2e-tester` solo aplican **si tu proyecto expone una interfaz que otros consumen** (API, librería, CLI, schema/formato). En ese caso, `contract.md` — no un prompt ni un MD suelto — es la fuente de verdad de la superficie pública, y el `spec.md` la referencia. Si no aplica, borralos (`GETTING-STARTED.md` explica cómo).
 - **Single pointers (sin duplicación acá)** — el flujo, los estados del lifecycle y el mapeo etapa→comando→agente viven en `specs/README.md`; las reglas no-negociables del proceso y la lista de señales de triage, en `specs/CONSTITUTION.md`; la clasificación de comportamiento (en qué bucket cae un pedido, y el override del dev) en `CLAUDE.md`.
 - **Lifecycle** — los estados de un artefacto (`draft` → `approved` → `proposed` → `shipped`/`done`) y las transiciones se gobiernan desde `specs/README.md`. Una spec no pasa a `approved` con marcadores `[VERIFICAR]` abiertos.
@@ -178,6 +190,8 @@ Este repo trabaja **SDD-first**: el trabajo que dispara cualquiera de las señal
 
 - `block-forbidden-command` (`PreToolUse` Bash) — bloquea el comando irreversible de cambio de esquema/datos (`{{MIGRATION_COMMAND}}`). Refuerza el contrato de `## Commands > Migrations` y `## Repo Contracts > Irreversible Commands`.
 - `block-protected-file` (`PreToolUse` Edit/Write) — bloquea ediciones a `{{SECRETS_FILE}}`. Refuerza el contrato de `## Repo Contracts > Secrets and Local Config`.
+- `block-history-links` (`PreToolUse` Edit/Write) — deniega agregar un link a historia en un archivo vivo, y en código una cita a `plan.md`/`tasks.md`. Refuerza `specs/CONSTITUTION.md §6`.
+- `spec-authoring` (`PreToolUse` + `PostToolUse` Edit/Write) — en `spec.md`/`contract.md` deniega agregar `archivo:línea`, changelogs fechados y conteos de corrida; avisa por tamaño. Refuerza `specs/CONSTITUTION.md §6`.
 
 ### OPCIONAL — proyectos multi-repo
 

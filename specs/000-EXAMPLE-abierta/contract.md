@@ -1,14 +1,14 @@
 ---
 name: 000-favoritos
 title: Marcar ítems como favoritos y ver la lista de favoritos
-status: shipped          # proposed | approved | shipped
+status: approved         # proposed | approved | shipped
 consumers: n/a (un repo — la UI consume el contrato in-repo)
 created: 2026-01-15
 approved-by: equipo (ejemplo)
 approved-date: 2026-01-15
 ---
 
-> ⚠️ EJEMPLO de referencia — no lo edites; borralo cuando ya entiendas el flujo.
+> ⚠️ EJEMPLO de referencia — no lo edites; borralo cuando ya entiendas el flujo. Contrato **aprobado, en construcción**; el mismo, shipeado, está en `../000-EXAMPLE-cerrada/`.
 
 > **OPCIONAL — solo si tu proyecto expone una interfaz que otros consumen (API, librería, CLI, schema/formato).**
 > Este ejemplo **SÍ** expone una interfaz (3 operaciones HTTP). Si tu proyecto no expone nada a un consumidor externo, **borrá `contract.md`** y poné `contract: n/a` en el frontmatter de `spec.md`.
@@ -16,7 +16,7 @@ approved-date: 2026-01-15
 # Contrato — Marcar ítems como favoritos y ver la lista de favoritos
 
 > **Fuente de verdad de la interfaz** de esta feature. El consumidor la REFERENCIA, no la re-describe.
-> Lifecycle: `proposed` (en diseño) → `approved` (consensuado, listo para construir) → `shipped` (implementado y desplegable).
+> Lifecycle: `proposed` (en diseño) → `approved` (consensuado, listo para construir) → `shipped` (implementado, con los tests de la spec en verde).
 > Las reglas transversales (forma de IDs, auth, colecciones nullable, envoltura de respuesta, errores→códigos) se asumen de `CONSTITUTION.md`; acá solo lo **específico** de la feature.
 
 ## 1. Resumen
@@ -49,37 +49,31 @@ Expone tres operaciones para que el usuario autenticado gestione sus favoritos: 
 | `createdAt` | timestamp | no | Cuándo se marcó |
 
 ## 4. Entidades / Migraciones
-Entidad nueva `Favorite { userId, itemId, createdAt }` con **índice/restricción único sobre `(userId, itemId)`** (garantiza idempotencia, AC5). Si tu stack necesita un cambio de esquema, **proponé** el comando (no lo ejecutes — lo corre la persona dev):
+Entidad nueva `Favorite { userId, itemId, createdAt }` con **índice/restricción único sobre `(userId, itemId)`** (garantiza idempotencia, AC5) y borrado en cascada cuando se elimina el ítem (AC6). Si tu stack necesita un cambio de esquema, **proponé** el comando (no lo ejecutes — lo corre la persona dev):
 
 ```
-{{MIGRATION_COMMAND}}   # ej. crear tabla/colección favorites + índice único (userId, itemId)
+{{MIGRATION_COMMAND}}   # ej. crear tabla/colección favorites + índice único (userId, itemId) + FK con cascada a items
 ```
 
 ## 5. Reglas de negocio / Invariantes específicas
-- **Idempotencia al marcar (AC5):** marcar un ítem ya marcado NO crea un segundo registro; devuelve el existente (`200` en vez de `201`).
-- **Idempotencia al desmarcar:** quitar un ítem que no estaba en favoritos NO es error (`204`); el estado final "no favorito" se cumple igual.
+- **Idempotencia al marcar (AC5):** marcar un ítem ya marcado NO crea un segundo registro; devuelve el existente (`200` en vez de `201`). La garantiza la restricción única en los datos, no un chequeo previo en la lógica: dos pedidos simultáneos no pueden duplicar.
+- **Idempotencia al desmarcar:** quitar un ítem que no estaba en favoritos responde `204`, no `404`: el estado final pedido ("no favorito") ya se cumple, y así el consumidor no tiene que distinguir casos.
 - **Ítem inexistente (AC3):** marcar un `itemId` que no existe → `404`, no se crea favorito.
 - **Aislamiento por usuario (AC4):** toda operación se acota al usuario de la sesión; no se puede leer ni tocar el favorito de otra persona.
 - **Estado vacío (AC3):** listar sin favoritos devuelve `[]`, nunca un error.
+- **Cascada (AC6):** al eliminar un ítem del catálogo se eliminan sus favoritos; ninguna lista devuelve un ítem que ya no existe.
 
 ## 6. Estados / enums
 _(ninguno — esta feature no introduce enums ni máquina de estados.)_
 
 ## 7. Pendientes / decisiones abiertas
-- _(ninguna — todas cerradas antes de `approved`. Si quedara una, iría así:)_
-- ~~[VERIFICAR] ¿`DELETE` sobre un favorito inexistente devuelve `204` o `404`? Decisión: `204` (idempotente). Cerrada.~~
+- _(ninguno — cada decisión quedó escrita como regla en §5, con su porqué. Ej.: "¿`DELETE` inexistente da `204` o `404`?" es hoy la regla "Idempotencia al desmarcar".)_
 
-## 8. Evidencia (completar cuando status = shipped)
-> `archivo:línea` reales que implementan cada operación. Esto vuelve el contrato un as-built verificable y alimenta `/verify`. (Paths de ejemplo — neutros y ficticios.)
-
-- `POST /favorites` → `{{SOURCE_ROOT}}/routes/favorites.<ext>:24` → servicio `{{SOURCE_ROOT}}/favorites/favorites_service.<ext>:18` (`add`)
-- `DELETE /favorites/{itemId}` → `{{SOURCE_ROOT}}/routes/favorites.<ext>:41` → servicio `favorites_service.<ext>:33` (`remove`)
-- `GET /favorites` → `{{SOURCE_ROOT}}/routes/favorites.<ext>:12` → servicio `favorites_service.<ext>:9` (`listByUser`)
-- Entidad + índice único `(userId, itemId)` → `{{SOURCE_ROOT}}/favorites/favorite.<ext>:7`
-- Tests → `{{SOURCE_ROOT}}/favorites/favorites.test.<ext>` (AC1–AC5)
+## 8. Evidencia
+- Tests: `{{SPEC_TEST_COMMAND}}` en verde.
 
 ## Criterios de salida (V&V de la interfaz)
-> El ingeniero humano valida esto ANTES de construir contra el contrato.
+> El ingeniero humano valida esto ANTES de construir contra el contrato. Se borra al shipear.
 - [x] Cada operación declara entrada, salida, autorización y errores.
 - [x] Consistente con el comportamiento de la spec (sin contradicciones).
 - [x] **0 `[VERIFICAR]`** sin resolver.

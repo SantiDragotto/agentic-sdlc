@@ -22,6 +22,7 @@ Esta skill corre el **validador determinístico** que convierte en chequeos auto
 - El `contract:` referenciado **existe** en disco (cross-ref no roto).
 - Un `contract.md` `shipped` no tiene `[VERIFICAR]` vivos y tiene `approved-by:`.
 - *(WARN)* la feature tiene fila en `INDEX.md`.
+- *(WARN)* una spec `done` está en su **forma mínima** (`CONSTITUTION.md §6`): no le quedan `plan.md`, `tasks.md` ni otro `.md` de proceso en la carpeta (los ejemplos `*-EXAMPLE-*` pueden llevar su `README.md`). Es WARN y no ERROR para que adoptar la regla sobre un corpus existente no rompa CI: el stock se compacta de a una con `spec-sanitize`.
 
 Excluye `specs/TEMPLATE/` (placeholders). Exit `1` si hay errores, `0` si no; los **WARN** no fallan.
 

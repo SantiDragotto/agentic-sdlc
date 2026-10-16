@@ -8,7 +8,7 @@ Estás en la fase **Tasks** del flujo SDD (ver `specs/README.md`). Para: $ARGUME
 
 1. Leé la `spec.md`, `plan.md` y (si existe) `contract.md` de la feature, y `specs/TEMPLATE/tasks.md`. Esta fase la maneja el hilo principal — no delega en un agente.
 2. Generá `specs/NNN-slug/tasks.md`: tareas atómicas en orden de ejecución. Cada tarea mapea a uno o más criterios de aceptación (columna **"Cubre AC"**) y declara sus prerequisitos en la columna **"Dep."** (número[s] de tarea de la que depende, o `[P]` si puede correr en paralelo con sus hermanas); todo AC queda cubierto por al menos una tarea.
-3. Incluí explícitamente las **tareas de test obligatorias** según las convenciones del proyecto (ver AGENTS.md → testing). Como mínimo, una tarea de test por cada criterio de aceptación de borde/error y de autorización.
+3. Incluí explícitamente las **tareas de test obligatorias** según las convenciones del proyecto (ver AGENTS.md → testing). Como mínimo, una tarea de test por cada criterio de aceptación de borde/error y de autorización. **Cada tarea de test declara el ancla `Spec`/`AC`** que va a llevar el test (columna "Test", `CONSTITUTION.md §5`): todo criterio termina citado por al menos un test, que es la precondición del cierre.
    [EJEMPLO — reemplazar por las reglas reales de tu proyecto]
    - Un test por cada escenario de autorización (acceso permitido / denegado / no autenticado).
    - Un test que verifique cada invariante de persistencia declarado en la spec.

@@ -14,7 +14,7 @@ Esta skill es la **alternativa GUIADA** al llenado manual descrito en `GETTING-S
 ## Qué hace y qué NO hace
 
 - **Hace:** entrevista al adoptante, propone valores, y —tras confirmación humana— reemplaza los `{{TOKEN}}` y los bloques `[EJEMPLO — reemplazar]` en los **3 archivos obligatorios**: `AGENTS.md`, `specs/CONSTITUTION.md §4`, y los bloques **"Convenciones del proyecto (completar)"** + **"Contratos duros del repo"** de `CLAUDE.md`. Aplica las decisiones de configuración (¿expone interfaz?, runner de hooks, idioma).
-- **NO hace:** no escribe código del proyecto, no crea specs de trabajo (`specs/NNN-*/`), no toca el ejemplo `000-EXAMPLE-feature/` ni `TEMPLATE/`, no corre migraciones, **nunca** inventa ni escribe valores de `{{SECRETS_FILE}}` (solo registra su *nombre/ruta*).
+- **NO hace:** no escribe código del proyecto, no crea specs de trabajo (`specs/NNN-*/`), no toca los ejemplos `000-EXAMPLE-abierta/` y `000-EXAMPLE-cerrada/` ni `TEMPLATE/`, no corre migraciones, **nunca** inventa ni escribe valores de `{{SECRETS_FILE}}` (solo registra su *nombre/ruta*).
 
 ## Principio rector (regla dura)
 
@@ -39,7 +39,7 @@ Recorré las categorías **en orden**. Por cada una: (a) proponé un valor concr
 
 1. **Nombre del proyecto** → `{{PROYECTO}}`. Una o dos frases de qué es y qué problema resuelve (alimenta `## Project Overview` de `AGENTS.md`).
 2. **Stack** → `{{STACK}}` y el bloque `## Stack`: lenguaje + framework principal, motor de persistencia, framework de tests + mocks/fixtures, librerías transversales (validación/mapeo/serialización), infra/servicios externos. Borrá las líneas que no apliquen.
-3. **Comandos** → `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}`, `{{RUN_COMMAND}}`, `{{MIGRATION_COMMAND}}`. Por cada uno proponé el comando idiomático del stack confirmado. Si el proyecto **no tiene migraciones**, marcá para borrar esa subsección entera (no inventes un comando).
+3. **Comandos** → `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}`, `{{SPEC_TEST_COMMAND}}`, `{{RUN_COMMAND}}`, `{{MIGRATION_COMMAND}}`. Por cada uno proponé el comando idiomático del stack confirmado. Para `{{SPEC_TEST_COMMAND}}` confirmá también la **forma del ancla `Spec`/`AC`** que lleva cada test (`CONSTITUTION.md §5`: trait, marker, tag o nombre filtrable) y que el comando la filtre de verdad; va a `AGENTS.md > Testing` y reemplaza el `[EJEMPLO]` de `CONSTITUTION.md §5`. Si el proyecto **no tiene migraciones**, marcá para borrar esa subsección entera (no inventes un comando).
 4. **Arquitectura / capas** → `## Architecture` (Layout, Layered Pattern, Cross-cutting Concerns) y `{{SOURCE_ROOT}}`. Capturá el árbol de carpetas de alto nivel y una línea por capa (entrada / dominio / aplicación / persistencia / tests), más cómo se cablean (inyección de dependencias, registro, punto único de acceso a datos).
 5. **Repo contracts** → poblá `## Repo Contracts` de `AGENTS.md` **y** los recordatorios de `CONSTITUTION.md §4`:
    - **Identidad** (Identity Invariants): regla de IDs en create/update.
@@ -66,13 +66,13 @@ Tres decisiones que cambian qué archivos quedan en el kit. Proponé el default,
 
 Solo con todo confirmado, aplicá los reemplazos. **Un bloque por vez, mostrando el antes/después al humano** antes de cada escritura cuando el bloque es sustancial:
 
-- **`AGENTS.md`** — reemplazá `{{PROYECTO}}`, `{{STACK}}`, `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}`, `{{RUN_COMMAND}}`, `{{MIGRATION_COMMAND}}`, `{{SOURCE_ROOT}}` y los bloques `[EJEMPLO — reemplazar]` de Overview, Stack, Commands, Architecture, Repo Contracts y Testing por los valores confirmados. Conservá **intactas** las dos meta-reglas de seguridad (secretos-por-nombre, no-correr-comandos-irreversibles) y el nombre `{{SECRETS_FILE}}` se reemplaza por la **ruta**, nunca por valores.
+- **`AGENTS.md`** — reemplazá `{{PROYECTO}}`, `{{STACK}}`, `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}`, `{{SPEC_TEST_COMMAND}}`, `{{RUN_COMMAND}}`, `{{MIGRATION_COMMAND}}`, `{{SOURCE_ROOT}}` y los bloques `[EJEMPLO — reemplazar]` de Overview, Stack, Commands, Architecture, Repo Contracts y Testing por los valores confirmados. Conservá **intactas** las dos meta-reglas de seguridad (secretos-por-nombre, no-correr-comandos-irreversibles) y el nombre `{{SECRETS_FILE}}` se reemplaza por la **ruta**, nunca por valores.
 - **`specs/CONSTITUTION.md §4 (Repo contracts)`** — reemplazá los tres bullets `[EJEMPLO — reemplazar]` (errores, autorización, secretos/config) por el resumen de los contratos reales confirmados en el Paso 1.5. Si el proyecto **no** expone interfaz y se decidió borrar la fase Contrato, eliminá también la §2.
 - **`CLAUDE.md`** — reemplazá:
   - el bloque **"Convenciones del proyecto (completar)"** (los bullets `[EJEMPLO — reemplazar]`) por las convenciones duras reales: cómo se registran/cablean componentes, cómo se accede a la persistencia, qué base extender en vez de reimplementar, cómo fluyen los errores.
   - el bloque **"Contratos duros del repo (ejemplos — reemplazar)"** (invariantes de ID, autorización, target framework, secretos, migraciones) por los contratos reales — consistentes con lo que ya escribiste en `AGENTS.md`/`CONSTITUTION.md`.
 
-> **No** toques `specs/TEMPLATE/`, `specs/000-EXAMPLE-feature/`, ni crees ninguna `specs/NNN-*/`. Esos son referencia/plantilla. La skill llena **gobernanza**, no produce trabajo de feature.
+> **No** toques `specs/TEMPLATE/`, `specs/000-EXAMPLE-*/`, ni crees ninguna `specs/NNN-*/`. Esos son referencia/plantilla. La skill llena **gobernanza**, no produce trabajo de feature.
 
 ## Paso 4 — Cierre
 
@@ -86,7 +86,7 @@ Solo con todo confirmado, aplicá los reemplazos. **Un bloque por vez, mostrando
 3. **Próximos pasos sugeridos:**
    - Correr **`/validate-specs`** para el gate determinístico del proceso.
    - Arrancar la primera feature con **`/spec <brief de la feature>`** y caminar hasta `/verify` (camino completo en `GETTING-STARTED.md §4`).
-   - Borrar `specs/000-EXAMPLE-feature/` cuando se entienda el flujo.
+   - Borrar `specs/000-EXAMPLE-abierta/` y `specs/000-EXAMPLE-cerrada/` cuando se entienda el flujo.
 
 ## Reglas duras (resumen)
 
@@ -98,4 +98,4 @@ Solo con todo confirmado, aplicá los reemplazos. **Un bloque por vez, mostrando
 
 ## Side-effects
 
-Edita: `AGENTS.md`, `specs/CONSTITUTION.md`, `CLAUDE.md`. Marca (no borra automáticamente) archivos de la fase Contrato y el runner de hook no elegido para que el humano los borre. No crea ni modifica ningún `specs/NNN-*/`, `TEMPLATE/`, ni `000-EXAMPLE-feature/`.
+Edita: `AGENTS.md`, `specs/CONSTITUTION.md`, `CLAUDE.md`. Marca (no borra automáticamente) archivos de la fase Contrato y el runner de hook no elegido para que el humano los borre. No crea ni modifica ningún `specs/NNN-*/`, `TEMPLATE/`, ni los ejemplos `000-EXAMPLE-*/`.

@@ -36,6 +36,8 @@ Del prompt: el `NNN-slug`. Leé `specs/NNN-slug/{spec,contract,plan,tasks}.md` (
    [EJEMPLO — reemplazar con los anti-patrones concretos de tu AGENTS.md]
 5. **Criterios mal escritos:** AC que no sean verificables (afirmaciones true/false comprobables contra el sistema) → señalalos para reescribir.
 6. **Trazabilidad cross-repo (OPCIONAL — solo en proyectos multi-repo):** si el contrato declara consumidores en otros repos (paths en `consumers:`), notá si hay desalineación obvia de nombres de campo/elemento de la interfaz.
+7. **Ancla de tests:** cada tarea de test de `tasks.md` declara su ancla `Spec`/`AC` (`CONSTITUTION.md §5`) y todo criterio termina citado por al menos una. Un criterio que ninguna tarea de test ancla no va a poder cerrar.
+8. **Forma mínima (`CONSTITUTION.md §6`):** `spec.md`/`contract.md` sin diario, sin preguntas ya cerradas o tachadas, sin conteos de corrida, sin `archivo:línea`, sin exploración del código (va al plan), sin links a historia; las decisiones escritas como regla o criterio, no como narrativa. Una decisión del `plan.md` que cambia lo que el sistema promete tiene que estar también como regla en la spec o el contrato (el plan se borra al cerrar).
 
 ## Salida
 
@@ -48,6 +50,8 @@ Un informe estructurado al hilo principal:
 - Contrato: <consistente | discrepancias: ... | N/A>
 - Reglas del repo (AGENTS/CONSTITUTION): <OK | violaciones: ...>
 - Criterios mal escritos: <ninguno | AC#: ...>
+- Ancla de tests: <OK | AC sin tarea de test anclada: ...>
+- Forma mínima: <OK | proceso en spec/contrato: ... | decisión solo en el plan: ...>
 
 ### Acciones antes de implementar
 1. ...

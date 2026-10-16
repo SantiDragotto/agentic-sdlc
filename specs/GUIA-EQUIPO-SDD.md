@@ -10,7 +10,7 @@ Antes, una feature era un MD suelto que se le pasaba a una IA por prompt. El det
 
 Ahora:
 
-> **La spec versionada en el repo es la fuente de verdad.** Cada feature tiene una carpeta en `specs/` con: qué hace y cómo sabemos que está terminada (`spec.md`), cómo se construye (`plan.md`) y la checklist de trabajo (`tasks.md`). Si tu proyecto expone una interfaz que otros consumen, además lleva la interfaz declarada (`contract.md`). **Nada está "done" hasta recorrer los criterios de aceptación uno por uno con `/verify`.**
+> **La spec versionada en el repo es la fuente de verdad.** Cada feature tiene una carpeta en `specs/` con: qué hace y cómo sabemos que está terminada (`spec.md`), cómo se construye (`plan.md`) y la checklist de trabajo (`tasks.md`); estos dos últimos son andamio y se borran al cerrar. Si tu proyecto expone una interfaz que otros consumen, además lleva la interfaz declarada (`contract.md`). **Nada está "done" hasta recorrer los criterios de aceptación uno por uno con `/verify`.**
 
 Si entendés solo esto, ya entendiste el 80%. El resto es mecánica.
 
@@ -25,8 +25,8 @@ Si entendés solo esto, ya entendiste el 80%. El resto es mecánica.
 | Archivo | Qué es | Cuándo lo tocás |
 |---|---|---|
 | `NNN-slug/spec.md` | QUÉ hace la feature y POR QUÉ + **criterios de aceptación** | al arrancar una feature |
-| `NNN-slug/plan.md` | CÓMO se construye: qué se reutiliza, archivos a tocar, riesgos | después de aprobar la spec |
-| `NNN-slug/tasks.md` | checklist atómica; cada tarea atada a un criterio | después de aprobar el plan |
+| `NNN-slug/plan.md` | CÓMO se construye: qué se reutiliza, archivos a tocar, riesgos | después de aprobar la spec; **se borra al cerrar** |
+| `NNN-slug/tasks.md` | checklist atómica; cada tarea atada a un criterio, con el ancla `Spec`/`AC` de cada test | después de aprobar el plan; **se borra al cerrar** |
 | `NNN-slug/contract.md` | la interfaz que exponés: forma, campos, errores, auth *(OPCIONAL — ver abajo)* | si la feature expone algo que otros consumen |
 | `INDEX.md` | catálogo de todas las specs del repo y su estado | siempre que abras o cierres una spec |
 | `HALLAZGOS.md` | inbox de bugs/dudas que encontrás usando la app | cuando ves algo raro |
@@ -115,12 +115,12 @@ Se ejecutan las tareas. **Cada tarea se marca ✅ en `tasks.md` al completarla**
 /verify 001-items-favoritos
 ```
 
-Qué pasa: se recorre **cada criterio de aceptación** contra el código y la app real, con evidencia (`archivo:línea`). Además de los criterios, corren los gates del proyecto: `{{BUILD_COMMAND}}` y `{{TEST_COMMAND}}`.
+Qué pasa: se recorre **cada criterio de aceptación** contra el test que lo cita (ancla `Spec`/`AC`, `CONSTITUTION.md §5`) y la app real. Además de los criterios, corren los gates del proyecto: `{{BUILD_COMMAND}}` y `{{SPEC_TEST_COMMAND}}`. Un criterio que ningún test cita es ❌, aunque el código parezca cumplirlo.
 
 - Algún ❌ → la feature **no** está done; se vuelve a implementación con la lista de lo que falta.
-- Todos ✅ → `status: done` en la spec, fila del `INDEX.md` actualizada.
+- Todos ✅ → `status: done` en la spec y se **compacta a la forma mínima** (`spec-sanitize --cierre`): se borran `plan.md`, `tasks.md` y el andamio de la spec, y las decisiones quedan escritas como reglas. Fila del `INDEX.md` actualizada.
 
-Si hay contrato, además pasa a `shipped` con su evidencia (`archivo:línea`).
+Si hay contrato, además pasa a `shipped` con su §8 en una línea: `{{SPEC_TEST_COMMAND}}` en verde. Para ver el antes y el después, compará `000-EXAMPLE-abierta/` con `000-EXAMPLE-cerrada/`.
 
 ---
 
@@ -158,6 +158,10 @@ Tips: formato **"Dado … cuando … entonces …"** o afirmación concreta sobr
 
 **¿Por qué cada agente "actúa como" un rol?** Porque el oficio cambia según la fase: quien escribe requisitos piensa como analista de requerimientos; quien diseña, como arquitecto; quien construye, como ingeniero sénior; quien verifica, como ingeniero de V&V. La IA produce en cada paso; **las decisiones importantes las tomás vos** (aprobás cada compuerta). Eso es lo que hace que el kit sirva para construir en serio, no solo para "vibecodear mejor".
 
+**¿Qué queda de una spec cuando se cierra?** `spec.md` (el problema, el comportamiento y los criterios) y `contract.md` (la interfaz, si hay). `plan.md` y `tasks.md` se borran: eran el andamio. Si una decisión del camino importa, ya está escrita como regla o criterio; lo demás queda en git y no se linkea. ¿Por qué? Una spec se lee muchas más veces de las que se escribe, y cada sesión de IA que la carga paga sus tokens: la forma cerrada del ejemplo pesa ~78% menos que la abierta (`000-EXAMPLE-abierta/` vs `000-EXAMPLE-cerrada/`).
+
+**¿Por qué cada test lleva `Spec`/`AC`?** Porque vuelve computable el "este criterio está probado": `{{SPEC_TEST_COMMAND}}` corre los tests de una spec y un grep del ancla dice qué criterio no cita ningún test. Es la precondición para cerrar la spec y para podarla sin miedo: con el test anclado, la versión ejecutable del criterio vive en el código y la spec puede quedar corta.
+
 **¿Dónde anoto un bug que encontré probando?** `specs/HALLAZGOS.md`. Una línea alcanza; el triage es después. **No lo arregles a ciegas ni lo pierdas.**
 
 **¿Dónde está el detalle formal del proceso?** `specs/README.md` (canónico). Este instructivo es el cómo-se-hace.
@@ -178,13 +182,13 @@ CONSUMIDOR:   "Le falta el campo isFavorite en la
                respuesta del listado" ................... [VERIFICAR] en su spec / comentario
 DUEÑO:        "Listo, agregado. ¿Cerramos así?" ......... edita el contract
 CONSUMIDOR:   "Cerrado." ................................ status: approved  ← construyen en paralelo
-DUEÑO:        "Implementado, con evidencia" ............. status: shipped (archivo:línea)
+DUEÑO:        "Implementado, tests en verde" ............ status: shipped (§8: tests de la spec)
 CONSUMIDOR:   consume la interfaz real, corre /verify ... su spec: done
 ```
 
 - `proposed` = puede cambiar; el consumidor arranca bajo su propio riesgo marcando `[VERIFICAR]`.
 - `approved` = consensuado; estable para construir en paralelo. **Todavía no existe del lado del dueño.**
-- `shipped` = implementado con evidencia. Recién acá el consumidor lo da por hecho.
+- `shipped` = implementado, con los tests de la spec en verde. Recién acá el consumidor lo da por hecho.
 - El token de estado es **una palabra**; matices después de un guion (`shipped — falta deploy a prod`). Nunca uses "shipped parcial" queriendo decir dos cosas.
 
 ### Los canales (la verdad durable vive en archivos versionados)
@@ -204,7 +208,7 @@ El chat (Slack/WhatsApp) es para el nudge ("shipié el contrato de favoritos, fi
 
 Al pasar un `contract.md` a `shipped` (o cambiar uno ya `shipped`):
 
-- [ ] `status: shipped` + Evidencia (`archivo:línea`, commit/PR)
+- [ ] `status: shipped` + §8 en una línea (`{{SPEC_TEST_COMMAND}}` en verde), sin `archivo:línea` ni commits
 - [ ] Fila del `INDEX.md` del dueño actualizada
 - [ ] **Por cada path en `consumers:`**: editar la spec consumidora (los `[VERIFICAR]` que este contrato responde)
 - [ ] Cerrar los items del `pendientes-*.md` del consumidor que este contrato resuelve

@@ -12,6 +12,12 @@ approved-date: <YYYY-MM-DD — al aprobar>
 
 # <Título de la feature>
 
+<!-- Nota del template (se borra al escribir la spec): la spec queda en el árbol al cerrar y describe el
+sistema, no cómo se construyó (CONSTITUTION.md §6). Al cerrar (/verify → spec-sanitize --cierre) quedan
+§1, §2, §4 y §6 (si evita un malentendido); §3, §5, §7, §8, §9 y los criterios de salida son andamio y se
+borran, sin renumerar. Nunca: diario, preguntas ya cerradas o tachadas, conteos de corrida ni archivo:línea.
+Una decisión que importa se escribe como regla (§2) o como criterio (§4). -->
+
 ## 1. Problema / Por qué
 <2-4 líneas: qué necesidad o dolor resuelve. Para quién. Por qué ahora.>
 
@@ -24,14 +30,14 @@ approved-date: <YYYY-MM-DD — al aprobar>
 | | | |
 
 ## 3. Análisis del problema
-> Modelá el **problema** antes de diseñar la solución — es el puente entre el QUÉ y el CÓMO (el diseño concreto va en `plan.md`). Para una feature trivial puede ser breve, pero no se salta.
+> Modelá el **problema** antes de diseñar la solución — es el puente entre el QUÉ y el CÓMO (el diseño concreto va en `plan.md`). Para una feature trivial puede ser breve, pero no se salta. Es andamio: se borra al cerrar (lo que describa una regla del sistema pasa a §2).
 - **Descomposición:** en qué sub-problemas o partes se divide.
 - **Modelo conceptual:** las entidades/conceptos clave y sus relaciones (qué cosas existen y cómo se vinculan), **sin** implementación.
 - **Impacto:** qué partes del sistema existente toca (a alto nivel; el detalle por archivo es del plan).
 - **Restricciones / riesgos:** lo que condiciona la solución o pone en riesgo el resultado, detectado **antes** de diseñar.
 
 ## 4. Criterios de aceptación  ⭐ (la pieza clave — esto se verifica en /verify)
-> Cada criterio: afirmación **testeable** (true/false) sobre el comportamiento del sistema, sin ambigüedad. Cubrí golden path, bordes (estado vacío, error), **autorización** e **invariantes de persistencia** (lo que tiene que seguir siendo cierto sobre los datos).
+> Cada criterio: afirmación **testeable** (true/false) sobre el comportamiento del sistema, sin ambigüedad, que va a **citar un test** con el ancla `Spec`/`AC` (`CONSTITUTION.md §5`) — si no te imaginás el test, el criterio está mal escrito. Cubrí golden path, bordes (estado vacío, error), **autorización** e **invariantes de persistencia** (lo que tiene que seguir siendo cierto sobre los datos). Los IDs (`AC1`, `AC2`…) no se renumeran nunca: el código y los tests los citan.
 
 [EJEMPLO — reemplazar]
 - [ ] AC1 (golden path) — Dado un usuario autenticado, cuando marca un ítem como favorito, entonces el ítem queda en su lista de favoritos.
@@ -40,7 +46,7 @@ approved-date: <YYYY-MM-DD — al aprobar>
 - [ ] AC4 (invariante de persistencia) — Dado un ítem que se elimina del catálogo, cuando se consulta cualquier lista de favoritos, entonces no aparecen referencias colgadas a ese ítem.
 
 ## 5. Contrato producido
-> OPCIONAL — solo si esta feature expone una interfaz que otros consumen (API, librería, CLI, schema/formato). Si no, poné `contract: n/a` en el frontmatter y borrá esta sección.
+> OPCIONAL — solo si esta feature expone una interfaz que otros consumen (API, librería, CLI, schema/formato). Si no, poné `contract: n/a` en el frontmatter y borrá esta sección. Se borra al cerrar: el `contract:` del frontmatter ya apunta al contrato.
 
 <Link a ./contract.md y la interfaz clave que esta feature define. Quién la consume.>
 
@@ -49,20 +55,20 @@ approved-date: <YYYY-MM-DD — al aprobar>
 - Consumido por: <quién lo usa | n/a>
 
 ## 6. Fuera de alcance
-<Qué explícitamente NO entra, para no expandir scope.>
+<Qué explícitamente NO entra, para no expandir scope. Al cerrar queda solo si evita un malentendido.>
 
 ## 7. Preguntas abiertas
-> Las dudas sin resolver van `[VERIFICAR]` (bloquean pasar a `approved`); las que el dev delegó en la IA van `[IA-DECIDIÓ] <decisión> — default aplicado, revisable` (no bloquean, quedan registradas). Ver protocolo `clarify`.
+> Las dudas sin resolver van `[VERIFICAR]` (bloquean pasar a `approved`); las que el dev delegó en la IA van `[IA-DECIDIÓ] <decisión> — default aplicado, revisable` (no bloquean, quedan registradas). Ver protocolo `clarify`. **La respuesta se escribe como regla en §2 o como criterio en §4** y el ítem se borra — no se deja la pregunta tachada. Se borra al cerrar.
 - [VERIFICAR] <pregunta sin resolver — bloquea pasar a `approved`>
 
 ## 8. Notas
-<Decisiones de diseño, reuso de algo existente, dependencias con otras specs.>
+<Reuso de algo existente, dependencias con otras specs. Una decisión que importa no va acá: va como regla (§2) o criterio (§4). Se borra al cerrar.>
 
 ## 9. Supuestos
-<Lo que se da por cierto y hay que validar. Un supuesto no validado es un defecto latente — el `requirements-reviewer` los caza.>
+<Lo que se da por cierto y hay que validar. Un supuesto no validado es un defecto latente — el `requirements-reviewer` los caza. Al validarse, si condiciona el comportamiento pasa a §2 como regla. Se borra al cerrar.>
 
 ## Criterios de salida (V&V de requisitos)
-> El ingeniero humano valida esto ANTES de pasar a Diseño. Atajar un defecto acá cuesta una fracción de atraparlo en /verify.
+> El ingeniero humano valida esto ANTES de pasar a Diseño. Atajar un defecto acá cuesta una fracción de atraparlo en /verify. Se borra al cerrar.
 - [ ] Cada criterio de aceptación es **testeable** (true/false, se puede tildar).
 - [ ] Cubren golden path + bordes (vacío, error, límite) + autorización + invariantes de persistencia.
 - [ ] **El problema está analizado** (§3: descomposición + modelo conceptual + impacto), no se saltó directo al diseño.

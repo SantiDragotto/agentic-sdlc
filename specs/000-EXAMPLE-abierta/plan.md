@@ -12,6 +12,7 @@ approved-date: 2026-01-15
 # Plan — Marcar ítems como favoritos y ver la lista de favoritos
 
 > El CÓMO. Se genera tras `spec.md` en `approved` (y `contract.md` en `approved` si toca la interfaz). Lo aprobás vos antes de implementar.
+> **Es andamio: se borra al cerrar** (mirá `../000-EXAMPLE-cerrada/`: este archivo ya no está). Por eso las decisiones de §7 que cambian lo que el sistema promete también están como regla en `spec.md` §2 / `contract.md` §5.
 > **Regla de oro:** reutilizar/extender lo que ya existe antes que crear (CONSTITUTION §3).
 
 ## 1. Enfoque técnico
@@ -34,7 +35,7 @@ Se modela "favorito" como una relación entre el usuario actual y un ítem. Se a
 | `{{SOURCE_ROOT}}/favorites/favorites_repository.<ext>` | Acceso a datos | crear | `add` (idempotente), `remove`, `listByUser` |
 | `{{SOURCE_ROOT}}/favorites/favorites_service.<ext>` | Lógica / servicio | crear | Orquesta: valida ítem, deriva usuario actual, llama al repositorio |
 | `{{SOURCE_ROOT}}/routes/favorites.<ext>` | API / UI | crear | Expone marcar / desmarcar / listar (ver `contract.md`) |
-| `{{SOURCE_ROOT}}/items/...` | Modelo de ítems | editar | (Opcional) cascada: al borrar un ítem, borrar sus favoritos |
+| `{{SOURCE_ROOT}}/items/...` | Modelo de ítems | editar | Cascada: al borrar un ítem, borrar sus favoritos (AC6) |
 
 > Capas (nombres **neutros de ejemplo** — adaptá a tu stack): entrada/API · lógica/servicio · modelo/entidad · acceso a datos · mapeo. Tu proyecto puede tener menos capas.
 
@@ -58,15 +59,16 @@ Si tu stack requiere un cambio de esquema, **proponé** el comando (no lo ejecut
 - **Bordes (AC3)**: lista vacía devuelve `[]` (no error); marcar `itemId` inexistente → "no encontrado".
 - **Autorización (AC4)**: el usuario A no ve ni puede quitar un favorito del usuario B; el de B queda intacto.
 - **Invariante de persistencia (AC5)**: marcar dos veces el mismo ítem → existe exactamente un registro.
-- Idempotencia de desmarcar: quitar algo no marcado no falla.
+- **Invariante de persistencia (AC6)**: borrar un ítem marcado → ninguna lista lo devuelve y no queda registro que lo referencie.
+- Idempotencia de desmarcar: quitar algo no marcado no falla (parte de AC2).
 
-[EJEMPLO — reemplazar] Nombres y framework de test según tu stack ({{TEST_COMMAND}}). Mantené un caso por criterio de aceptación para que `/verify` pueda mapear test ↔ AC.
+Cada test lleva el ancla `Spec=000` + `AC=ACn` desde que se escribe (`CONSTITUTION.md §5`), así `/verify` lo encuentra con `{{SPEC_TEST_COMMAND}}`. [EJEMPLO — reemplazar] Nombres y framework de test según tu stack.
 
 ## 7. Riesgos / decisiones
 > **Trazabilidad + complexity tracking:** ligá cada decisión técnica y dependencia nueva al/los criterio(s) que la justifican; toda desviación de la opción más simple (una abstracción/capa/dependencia extra) va documentada acá con su porqué.
 
-- **Idempotencia**: garantizarla por restricción de unicidad en la base, no solo por un `if` en código, evita carreras (dos requests casi simultáneos). Decisión tomada.
-- **Cascada al borrar ítem**: se decide borrar los favoritos asociados cuando se elimina un ítem, para no dejar referencias colgadas. Bajo impacto.
+- **Idempotencia**: garantizarla por restricción de unicidad en la base, no solo por un `if` en código, evita carreras (dos requests casi simultáneos). Sobrevive al cierre como regla en `contract.md` §5.
+- **Cascada al borrar ítem**: se borran los favoritos asociados cuando se elimina un ítem, para no dejar referencias colgadas. Sobrevive al cierre como regla en `spec.md` §2 y criterio AC6.
 - **Performance de listar**: con índice sobre `userId` el listado es barato; no se prevé paginación en esta primera versión (fuera de alcance).
 
 ## Criterios de salida (V&V de diseño)

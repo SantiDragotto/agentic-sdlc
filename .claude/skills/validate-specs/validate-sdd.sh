@@ -70,6 +70,17 @@ for d in "$SPECS_DIR"/[0-9][0-9][0-9]-*/; do
   if [ "$status" = "done" ]; then
     unchk=$(grep -E '^[[:space:]]*-[[:space:]]*\[ \]' "$spec" 2>/dev/null | wc -l | tr -d ' ')
     [ "$unchk" -gt 0 ] && err "$name/spec.md : status 'done' con $unchk checkbox(es) sin tildar (- [ ])"
+    # Forma minima (CONSTITUTION.md seccion 6): una spec done conserva solo spec.md y contract.md.
+    # Los ejemplos (*-EXAMPLE-*) pueden llevar su README.md explicativo.
+    proceso=""
+    for f in "$d"*.md; do
+      [ -f "$f" ] || continue
+      fn=$(basename "$f")
+      case "$fn" in spec.md | contract.md) continue ;; esac
+      if [ "$fn" = "README.md" ] && printf '%s' "$name" | grep -qi -- '-EXAMPLE-'; then continue; fi
+      proceso="${proceso}${proceso:+, }$fn"
+    done
+    [ -n "$proceso" ] && warn "$name : status 'done' con proceso sin borrar ($proceso) - corre spec-sanitize $(printf '%s' "$name" | cut -d- -f1)"
   fi
 
   iad=$(ia_decide "$spec")

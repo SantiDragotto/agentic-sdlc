@@ -24,7 +24,7 @@ Es decir: *agentic-sdlc* = el ciclo de vida de software de siempre, recorrido po
 
 ---
 
-El **pitch de SDD** en un párrafo: la **spec versionada en el repo es la fuente de verdad, no el prompt**. El prompt es efímero y se pierde; la spec queda en git, se revisa y se verifica. Cada **feature = una carpeta numerada** (`specs/NNN-slug/`) con su `spec.md` (comportamiento + **criterios de aceptación** verificables, true/false), su `plan.md` (el cómo) y su `tasks.md` (la checklist atómica). Y **nada está `done` hasta pasar `/verify`**, recorriendo cada criterio de aceptación uno por uno con **evidencia** (`archivo:línea` y/o comportamiento ejecutado real). Esto reemplaza el "escribo lo que quiero en un prompt y lo voy refinando": acá el detalle vive en un artefacto que se versiona, se discute y se cierra.
+El **pitch de SDD** en un párrafo: la **spec versionada en el repo es la fuente de verdad, no el prompt**. El prompt es efímero y se pierde; la spec queda en git, se revisa y se verifica. Cada **feature = una carpeta numerada** (`specs/NNN-slug/`) con su `spec.md` (comportamiento + **criterios de aceptación** verificables, true/false), su `plan.md` (el cómo) y su `tasks.md` (la checklist atómica). Y **nada está `done` hasta pasar `/verify`**, recorriendo cada criterio de aceptación uno por uno con **evidencia** (un test que lo cita, en verde, y/o comportamiento ejecutado real). Al cerrar, la spec se **compacta a su forma mínima** (`spec.md` + `contract.md`; `plan.md` y `tasks.md` se borran): se lee muchas más veces de las que se escribe, y cada sesión paga sus tokens. Esto reemplaza el "escribo lo que quiero en un prompt y lo voy refinando": acá el detalle vive en un artefacto que se versiona, se discute y se cierra.
 
 ---
 
@@ -40,7 +40,7 @@ Cada fase clásica del SDLC tiene en este kit un **artefacto**, un **comando** y
 | **Diseño** | *cómo* se construye, qué se **reutiliza**, y la interfaz expuesta | `plan.md` · `/plan` · `solution-designer` (+ `contract.md` · `/contract`, OPCIONAL) |
 | **Construcción** | escribir el código y sus **tests obligatorios** | `tasks.md` · `/tasks` + `builder` |
 | **Pruebas / V&V** | probar que **cada criterio de aceptación** se cumple, con evidencia | `/verify` · `validator` (+ `e2e-tester`, OPCIONAL) |
-| **Entrega / cierre** | marcar `done`, actualizar `INDEX.md`, pasar el contrato a `shipped` | cierre de `/verify` |
+| **Entrega / cierre** | marcar `done`, compactar la spec a la forma mínima, actualizar `INDEX.md`, pasar el contrato a `shipped` | cierre de `/verify` · `spec-sanitize` |
 
 > El detalle fase por fase (estados del lifecycle, criterios de salida, quién aprueba) vive en [`specs/README.md`](./specs/README.md) — incluida la misma tabla con la columna *Etapa SDLC*. Acá te quedás con el mapa conceptual.
 
@@ -98,7 +98,7 @@ La **maquinaria de IA** vive en `.claude/` (detalle en [`.claude/README.md`](./.
 |---|---|---|
 | **Comandos** (`.claude/commands/`) | 6 | Un comando fino por fase del flujo (`/spec` `/plan` `/tasks` `/analyze` `/verify` `/contract`); cada uno delega en un agente. `/contract` es OPCIONAL. |
 | **Agentes** (`.claude/agents/`) | 7 | Subagentes con rol profesional (analista, arquitecto, QA, ingeniero, V&V…) que ejecutan cada etapa con contexto aislado. |
-| **Skills** (`.claude/skills/`) | 4 | Workflows estructurados: `bug-finder`, `validate-specs` (gate determinístico + CI), `setup` (onboarding), `clarify` (preguntas por fase). |
+| **Skills** (`.claude/skills/`) | 5 | Workflows estructurados: `bug-finder`, `validate-specs` (gate determinístico + CI), `spec-sanitize` (cierre: spec a la forma mínima), `setup` (onboarding), `clarify` (preguntas por fase). |
 | **Hooks** (`.claude/hooks/`) | 2 | Guardas determinísticas que el harness corre en eventos: `block-forbidden-command` y `block-protected-file` (cada uno `.ps1` + `.sh`). |
 
 ---
@@ -147,6 +147,7 @@ agentic-sdlc/
 │   ├── skills/               ← skills reutilizables (workflows estructurados)
 │   │   ├── bug-finder/SKILL.md       ← loop de búsqueda/convergencia de bugs
 │   │   ├── validate-specs/SKILL.md   ← gate determinístico del proceso (+ scripts + CI)
+│   │   ├── spec-sanitize/SKILL.md    ← compacta una spec done a la forma mínima (+ compact-spec)
 │   │   ├── setup/SKILL.md            ← onboarding guiado (llena los 3 archivos obligatorios)
 │   │   ├── clarify/SKILL.md          ← protocolo de preguntas en CADA fase
 │   │   └── README.md
@@ -166,8 +167,10 @@ agentic-sdlc/
     ├── TEMPLATE/             ← plantillas en blanco para copiar a cada feature
     │   ├── spec.md · plan.md · tasks.md
     │   └── contract.md       ← OPCIONAL — solo si exponés una interfaz
-    └── 000-EXAMPLE-feature/  ← ejemplo lleno READ-ONLY (borralo cuando entiendas el flujo)
-        └── spec.md · plan.md · tasks.md · contract.md
+    ├── 000-EXAMPLE-abierta/  ← ejemplo READ-ONLY a mitad de construcción
+    │   └── spec.md · plan.md · tasks.md · contract.md
+    └── 000-EXAMPLE-cerrada/  ← la misma feature cerrada: forma mínima (borrá los dos cuando entiendas el flujo)
+        └── spec.md · contract.md
 ```
 
 ---
@@ -183,7 +186,7 @@ Cada fase tiene un comando fino que delega en un agente especializado:
 | Plan | `/plan` | `solution-designer` | `plan.md` — el cómo, qué se reutiliza, riesgos |
 | Tasks | `/tasks` | — (hilo principal) | `tasks.md` — checklist atómica atada a los criterios |
 | Analyze | `/analyze` | `spec-analyst` | reporte de consistencia (antes de codear) |
-| Verify | `/verify` | `validator` (+ `e2e-tester`) | cada criterio en ✅ con evidencia → `done` |
+| Verify | `/verify` | `validator` (+ `e2e-tester`) | cada criterio en ✅ con un test que lo cita → `done` + spec compactada |
 
 > Las fases marcadas **OPCIONAL** (`/contract`, `contract.md`, agente `e2e-tester`) solo aplican si tu proyecto expone una interfaz que otros consumen (API, librería, CLI, schema/formato). Si no, `GETTING-STARTED.md` te dice cómo borrarlas.
 
@@ -193,7 +196,7 @@ Cada fase tiene un comando fino que delega en un agente especializado:
 
 | Marcador | Qué significa | Qué hacés |
 |---|---|---|
-| `{{TOKEN}}` | un valor que DEBÉS reemplazar (`{{PROYECTO}}`, `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}`, `{{RUN_COMMAND}}`, `{{SOURCE_ROOT}}`, `{{SECRETS_FILE}}`, `{{MIGRATION_COMMAND}}`) | buscar y reemplazar por el real |
+| `{{TOKEN}}` | un valor que DEBÉS reemplazar (`{{PROYECTO}}`, `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}`, `{{SPEC_TEST_COMMAND}}`, `{{RUN_COMMAND}}`, `{{SOURCE_ROOT}}`, `{{SECRETS_FILE}}`, `{{MIGRATION_COMMAND}}`) | buscar y reemplazar por el real |
 | `[EJEMPLO — reemplazar]` | bloque ilustrativo que muestra la FORMA | editar o borrar |
 | `[VERIFICAR]` | pregunta abierta que **bloquea** pasar a `approved` | resolver antes de aprobar la spec |
 

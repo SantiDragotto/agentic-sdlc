@@ -10,6 +10,6 @@ Estás en la fase **Contrato** del flujo SDD (ver `specs/README.md`) — quien e
 
 1. Leé `specs/CONSTITUTION.md` y `specs/TEMPLATE/contract.md`.
 2. Delegá la exploración + redacción al agente **`solution-designer`**: que recorra la interfaz y las abstracciones existentes (no duplicar), respete las convenciones del proyecto (ver AGENTS.md — IDs, autorización, forma de respuesta/error, cambios de esquema vía `{{MIGRATION_COMMAND}}`) y produzca un borrador de `specs/NNN-slug/contract.md` desde el template.
-3. Revisá el borrador y **preguntame hasta que no quede ningún `[VERIFICAR]`**. No escribas código.
+3. Revisá el borrador y **preguntame hasta que no quede ningún `[VERIFICAR]`**: cada respuesta se escribe como regla en §5 del contrato (qué + por qué + qué se descartó), no como pregunta cerrada. No escribas código.
 4. Dejá `status: proposed`. Pasa a `approved` cuando lo apruebo; a `shipped` recién cuando esté implementado (lo marca `/verify`).
 5. **OPCIONAL — multi-repo:** si algún consumidor (paths declarados en `consumers:`) debería enterarse del contrato nuevo/cambiado, avisalo según el checklist de coordinación cross-repo de `specs/README.md`.

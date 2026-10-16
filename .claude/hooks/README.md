@@ -107,15 +107,21 @@ command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
 
 ## Activos en este template
 
-Los **2 hooks** de ejemplo, cableados en `.claude/settings.json`. Ambos son **plantillas**: editá el patrón interno para que apunte a tu comando/archivo real. Cada uno se shipea en dos runners gemelos (`.ps1` + `.sh`).
+Los **4 hooks**, cableados en `.claude/settings.json`. Cada uno se shipea en dos runners gemelos (`.ps1` + `.sh`). Los dos primeros son **plantillas** (editá el patrón interno para que apunte a tu comando/archivo real); los dos últimos defienden `specs/CONSTITUTION.md §6` y funcionan tal cual (solo ajustá las extensiones a tu stack).
 
-| Hook | Evento | Qué bloquea | Archivos |
+| Hook | Evento | Qué hace | Archivos |
 |---|---|---|---|
-| `block-forbidden-command` | `PreToolUse` (Bash) | Un comando Bash prohibido (ej. `{{MIGRATION_COMMAND}}`) | `block-forbidden-command.{ps1,sh}` |
-| `block-protected-file` | `PreToolUse` (Edit\|Write) | Edit/Write a un archivo protegido (ej. `{{SECRETS_FILE}}`) | `block-protected-file.{ps1,sh}` |
+| `block-forbidden-command` | `PreToolUse` (Bash) | Bloquea un comando Bash prohibido (ej. `{{MIGRATION_COMMAND}}`) | `block-forbidden-command.{ps1,sh}` |
+| `block-protected-file` | `PreToolUse` (Edit\|Write) | Bloquea Edit/Write a un archivo protegido (ej. `{{SECRETS_FILE}}`) | `block-protected-file.{ps1,sh}` |
+| `block-history-links` | `PreToolUse` (Edit\|Write) | Deniega **agregar** un link a historia en un archivo vivo; en código, además, citas a `plan.md`/`tasks.md` | `block-history-links.{ps1,sh}` |
+| `spec-authoring` | `PreToolUse` + `PostToolUse` (Edit\|Write) | En `specs/NNN-*/spec.md`/`contract.md`: deniega **agregar** proceso; avisa si el archivo pasa el presupuesto de tamaño | `spec-authoring.{ps1,sh}` |
 
 - `block-forbidden-command.{ps1,sh}` — bloquea un comando Bash prohibido (ej. `{{MIGRATION_COMMAND}}` u otra operación que solo un humano debe correr). Defensa de repo contract `AGENTS.md > Commands`. Editá el patrón regex dentro del script.
 - `block-protected-file.{ps1,sh}` — bloquea Edit/Write sobre un archivo protegido (ej. `{{SECRETS_FILE}}`). Defensa de repo contract `AGENTS.md > Repo Contracts > Secrets and Local Config`. Editá el patrón de path dentro del script.
+- `block-history-links.{ps1,sh}` — deniega un Edit/Write que **agrega** un link a historia (`_archive/`, `docs/archive`, `git show <ref>:<ruta>`, `commit <sha>` o un SHA suelto entre backticks) en cualquier archivo vivo; en código (fuera de `specs/` y `.claude/`), además, las citas al proceso de una spec (`plan.md`, `tasks.md`, `tarea T3`), que se borran al cerrarla. Compara antes y después: sacar un link viejo o editar cerca de uno pasa. Exentos: `CLAUDE.md`, `AGENTS.md`, `.claude/hooks/`, `.claude/skills/spec-sanitize/` (documentan la regla). Sumá las carpetas de archivo de tu repo al patrón.
+- `spec-authoring.{ps1,sh}` — sobre `specs/NNN-*/spec.md` y `contract.md`. En `PreToolUse` deniega lo que la edición **agrega** de anclas `archivo:línea`, changelogs fechados ("enmienda del …", "(dev AAAA-MM-DD)") y conteos de corrida ("34/34 tests"). En `PostToolUse` avisa (sin bloquear, una vez por archivo y sesión) si el archivo supera el presupuesto (15 KB `spec.md`, 20 KB `contract.md`). Ajustá la lista de extensiones de la ancla y el presupuesto a tu repo.
+
+Los runners `.sh` de estos dos últimos también requieren `jq` y fallan abiertos sin él.
 
 ## Roadmap (ideas para extender)
 

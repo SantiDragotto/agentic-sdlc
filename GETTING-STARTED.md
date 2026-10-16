@@ -30,6 +30,7 @@ El kit marca todo lo que tenés que tocar con tres marcadores. Aprendé a distin
   - `{{PROYECTO}}` — nombre de tu proyecto.
   - `{{BUILD_COMMAND}}` — comando de build/compilación.
   - `{{TEST_COMMAND}}` — comando que corre los tests.
+  - `{{SPEC_TEST_COMMAND}}` — comando que corre solo los tests anclados a una spec (`Spec=NNN`); es el gate de `/verify` y la §8 del contrato. Definí también la forma del ancla `Spec`/`AC` en `AGENTS.md > Testing`.
   - `{{RUN_COMMAND}}` — comando que levanta/ejecuta la app.
   - `{{SOURCE_ROOT}}` — raíz del código de producción.
   - `{{SECRETS_FILE}}` — archivo de secretos/config local (el que **nunca** se toca ni se revela).
@@ -71,7 +72,7 @@ Una interfaz = una API, una librería, un CLI, o un schema/formato de datos que 
   - la §2 de `specs/CONSTITUTION.md` (y las menciones a `e2e-tester` en `specs/README.md`: §0 Contrato, §7 Verify y la fila 7 de la tabla de fases)
   - el `contract:` del frontmatter en tus specs queda como `n/a (no expone interfaz nueva)`.
 
-  (El ejemplo `specs/000-EXAMPLE-feature/` incluye `contract.md` a propósito, para que veas la fase aunque después la borres.)
+  (Los ejemplos `specs/000-EXAMPLE-*/` incluyen `contract.md` a propósito, para que veas la fase aunque después la borres.)
 
 ### 3.2. Elegí y editá tus hooks
 
@@ -119,7 +120,7 @@ Con los tres archivos de la sección 1 ya llenos, hacé una feature de prueba de
 6. **Implementar**
    El `builder` ejecuta las tareas siguiendo `AGENTS.md` + `CLAUDE.md` + `CONSTITUTION.md`, marcando cada tarea en `tasks.md` al completarla.
 7. **`/verify`**
-   El `validator` recorre **cada criterio de aceptación** con evidencia (`archivo:línea` y/o comportamiento real), corre `{{BUILD_COMMAND}}` y `{{TEST_COMMAND}}` (y `e2e-tester` si hay contrato). Con todos los AC en ✅ → `status: done`; el contrato pasa a `shipped`; se actualiza `INDEX.md`.
+   El `validator` corre `{{SPEC_TEST_COMMAND}}` y recorre **cada criterio de aceptación** contra el test que lo cita (ancla `Spec`/`AC`) y el código (y `e2e-tester` si hay contrato). Con todos los AC en ✅ → `status: done`; el contrato pasa a `shipped` con su §8 en una línea; la spec se **compacta a la forma mínima** (`spec-sanitize --cierre`: se borran `plan.md`/`tasks.md` y el andamio); se actualiza `INDEX.md`.
 
 > **Regla de oro:** una feature no está `done` hasta pasar `/verify` con **todos** los criterios de aceptación en ✅.
 
@@ -129,15 +130,18 @@ El proceso completo, fase por fase, está en `specs/README.md`. El paso a paso p
 
 ---
 
-## 5. El ejemplo read-only
+## 5. Los ejemplos read-only
 
-`specs/000-EXAMPLE-feature/` es una feature **completa y llena** ("el usuario puede marcar ítems como favoritos y ver su lista de favoritos") que muestra cómo se ve cada artefacto una vez terminado: un golden-path, un caso de borde/error, uno de autorización y un invariante de persistencia, criterios de aceptación true/false, plan, tasks y contrato.
+Dos carpetas con la **misma feature** ("el usuario puede marcar ítems como favoritos y ver su lista de favoritos") en dos momentos:
+
+- `specs/000-EXAMPLE-abierta/` — **a mitad de construcción**: los 4 artefactos llenos (spec `in-progress`, contrato `approved`, plan, tasks con la mitad hecha). Muestra un golden-path, un caso de borde/error, uno de autorización e invariantes de persistencia, criterios de aceptación true/false y cada tarea de test con su ancla `Spec`/`AC`.
+- `specs/000-EXAMPLE-cerrada/` — **después de `/verify`**: solo `spec.md` y `contract.md` en su forma mínima (~78% menos). Así queda toda spec `done`, y es lo que cargan las sesiones futuras (`CONSTITUTION.md §6`).
 
 Cada archivo abre con:
 
 > ⚠️ EJEMPLO de referencia — no lo edites; borralo cuando ya entiendas el flujo.
 
-Usalo de referencia mientras hacés tu primera feature. **Cuando ya entendés el flujo, borrá la carpeta entera** (`specs/000-EXAMPLE-feature/`) — es read-only y no es parte de tu proyecto. Tu primer `NNN` real es `001` (próximo libre del `INDEX.md`).
+Usalos de referencia mientras hacés tu primera feature. **Cuando ya entendés el flujo, borrá las dos carpetas** (`specs/000-EXAMPLE-abierta/` y `specs/000-EXAMPLE-cerrada/`) y sus filas del `INDEX.md` — son read-only y no son parte de tu proyecto. Tu primer `NNN` real es `001` (próximo libre del `INDEX.md`).
 
 ---
 
@@ -156,5 +160,5 @@ Un equipo que prefiera trabajar en inglés **puede traducir la prosa**: la estru
 3. ¿Exponés interfaz? No → borrá `/contract`, `contract.md`, `e2e-tester`.
 4. Elegí runner de hooks (`.ps1` vs `.sh`) y editá su patrón.
 5. `/spec marcar ítems como favoritos` → caminá hasta `/verify`.
-6. Borrá `specs/000-EXAMPLE-feature/` cuando entiendas el flujo.
+6. Borrá `specs/000-EXAMPLE-abierta/` y `specs/000-EXAMPLE-cerrada/` cuando entiendas el flujo.
 7. Corré `/validate-specs` antes de cada aprobación (y completá `approved-by:` en el frontmatter).
