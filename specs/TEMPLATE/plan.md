@@ -10,6 +10,7 @@ approved-date: <YYYY-MM-DD>
 # Plan — <Título de la feature>
 
 > El CÓMO. Se genera tras `spec.md` en `approved` (y `contract.md` en `approved` si la feature expone una interfaz). Lo aprobás vos antes de implementar.
+> **Es andamio: se borra al cerrar la spec** (`CONSTITUTION.md §6`). Lo que tenga que sobrevivir (una regla, una decisión que el consumidor o el próximo dev va a preguntar) se escribe en `spec.md` §2 o `contract.md` §5, no acá. Por lo mismo, ningún comentario de código cita este plan ni sus rótulos.
 > **Regla de oro:** reutilizar/extender lo que ya existe antes que crear (ver CONSTITUTION §3).
 
 ## 1. Enfoque técnico
@@ -40,11 +41,12 @@ approved-date: <YYYY-MM-DD>
 <Por operación: qué permiso/rol/scope se exige y cómo se chequea. ¿Punto de control nuevo? (mantené la lógica de autorización fuera del cuerpo de la operación; centralizala). Documentá acá las reglas transversales que apliquen — ej. jerarquías de permisos, bypass de admin — para no repetirlas en cada test.>
 
 ## 6. Tests
-<Qué cubrir y dónde. Toda operación protegida → escenarios de autorización (ver tasks.md). Operación que persiste → invariantes de integridad de datos. Convención de nombres de tests del proyecto (ver `AGENTS.md`/`CLAUDE.md`).>
+<Qué cubrir y dónde. Toda operación protegida → escenarios de autorización (ver tasks.md). Operación que persiste → invariantes de integridad de datos. Convención de nombres de tests del proyecto (ver `AGENTS.md`/`CLAUDE.md`). Cada test que cubre un criterio lleva el ancla `Spec`/`AC` desde que se escribe (`CONSTITUTION.md §5`).>
 
 ## 7. Riesgos / decisiones
 > **Trazabilidad + complexity tracking:** ligá cada decisión técnica y dependencia nueva al/los criterio(s) que la justifican; toda desviación de la opción más simple (una abstracción/capa/dependencia extra) va documentada acá con su porqué.
 > **Decisiones delegadas a la IA:** las que el dev delegó (protocolo `clarify`) quedan registradas acá como `[IA-DECIDIÓ] <decisión> — default aplicado, revisable` (no bloquean, pero son visibles y revisables).
+> **Antes de cerrar:** toda decisión de acá que cambie lo que el sistema hace o promete se pasa a `spec.md` §2 o `contract.md` §5 como regla; el resto se va con el plan.
 
 - <riesgo o trade-off, y cómo se maneja. Versión de runtime/lenguaje del repo (ver `AGENTS.md`) si usás APIs nuevas. Impacto sobre cache, rendimiento o concurrencia si aplica.>
 

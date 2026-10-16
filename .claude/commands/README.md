@@ -48,7 +48,7 @@ Los **6 comandos** del flujo **Spec-Driven Development** (ver `specs/README.md`)
 | `/plan [NNN-slug]` | Diseño (CÓMO) | `solution-designer` | `plan.md` |
 | `/tasks [NNN-slug]` | Descomposición (checklist atómica) | — (hilo principal) | `tasks.md` |
 | `/analyze [NNN-slug]` | Análisis (consistencia antes de codear) | `spec-analyst` | reporte de consistencia |
-| `/verify [NNN-slug]` | Verify (Definition of Done — cada criterio con evidencia) | `validator` (+ `e2e-tester` OPCIONAL) | tabla AC×evidencia |
+| `/verify [NNN-slug]` | Verify (Definition of Done — cada criterio citado por un test en verde) + cierre en forma mínima | `validator` (+ `e2e-tester` OPCIONAL) · skill `spec-sanitize --cierre` | tabla AC×evidencia + spec compactada |
 
 El flujo completo, de pedido a `done`:
 

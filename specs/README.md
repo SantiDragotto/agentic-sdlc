@@ -48,9 +48,24 @@ Semántica de los estados:
 - `approved` — consensuado y estable. Recién acá se planea/construye en serio.
 - `in-progress` — alguien está implementando las tareas.
 - `done` — pasó `/verify` con **todos** los criterios de aceptación en ✅.
-- `proposed` / `shipped` (solo `contract.md`) — el contrato se está diseñando / ya está implementado con evidencia `archivo:línea`.
+- `proposed` / `shipped` (solo `contract.md`) — el contrato se está diseñando / ya está implementado, con los tests de la spec en verde (`{{SPEC_TEST_COMMAND}}`).
 
 El token de estado es **una sola palabra canónica**. Los matices van después de un guion: `shipped — falta deploy a prod`, nunca "shipped parcial" reusado con dos significados distintos.
+
+## Ciclo de vida del artefacto
+
+Una spec cerrada describe el sistema, no cómo se construyó (`CONSTITUTION.md §6`). Se lee muchas más veces de las que se escribe, así que lo que no va a volver a preguntarse se borra al cerrar:
+
+| Artefacto | Mientras se construye | Al cerrar (`/verify` ✅) | Después |
+|---|---|---|---|
+| `spec.md` | todas las secciones del template, `[VERIFICAR]`, criterios de salida | §1 Problema · §2 Comportamiento · §4 Criterios · §6 Fuera de alcance (si evita un malentendido); sin renumerar | cambia solo si cambia el comportamiento |
+| `contract.md` | interfaz, modelos, reglas, estados, pendientes | §8 = una línea de tests; sin pendientes, notas ni criterios de salida | cambia solo con el comportamiento, avisando a `consumers:` |
+| `plan.md` | enfoque, reuso, cambios por archivo, riesgos | **se borra** | — |
+| `tasks.md` | tareas atadas a criterios, con el ancla `Spec`/`AC` de cada test | **se borra** | — |
+| notas, verify, decisiones sueltas | no se crean: una decisión es una regla o un criterio | — | — |
+| `INDEX.md` | fila nueva | status actualizado | — |
+
+Lo que se borra queda en git y **no se linkea** desde ningún archivo vivo. El cierre lo hace la skill `spec-sanitize NNN --cierre` (la corre `/verify`); la misma skill, sin `--cierre`, compacta de a una las specs `done` viejas que todavía cargan proceso.
 
 ---
 
@@ -70,7 +85,7 @@ Cada fase tiene un comando fino en `.claude/commands/`. El comando delega el tra
 | 6 | Construcción | **Implementar** | — | `builder` | — |
 | 7 | Test y validación | **Verify** | `/verify` | `validator` (+ `e2e-tester` opcional) | El dev/lead |
 
-**Regla de oro:** una feature no está `done` hasta pasar `/verify` con **todos** los criterios de aceptación en ✅. Y `/verify` no es solo tildar: actualiza el `INDEX.md` y cierra los hilos que correspondan (cierre del loop).
+**Regla de oro:** una feature no está `done` hasta pasar `/verify` con **todos** los criterios de aceptación en ✅. Y `/verify` no es solo tildar: compacta la spec a la forma mínima, actualiza el `INDEX.md` y cierra los hilos que correspondan (cierre del loop).
 
 ### −1. Intake / triage — antes de elegir fase
 Entendé la intención del dev, clasificá el pedido (feature/cambio observable · fix trivial-mecánico · pregunta-exploración · ops/infra) y elegí ruta. Las señales canónicas viven en `CONSTITUTION.md §1`; el gate de comportamiento que decide está en `CLAUDE.md`. **Ante la duda, es SDD.**
@@ -78,19 +93,19 @@ Entendé la intención del dev, clasificá el pedido (feature/cambio observable 
 ### 0. `/contract` — la interfaz *(OPCIONAL)*
 > **Solo si tu proyecto expone una interfaz que otros consumen** (API, librería, CLI, schema/formato de archivo). Si tu proyecto no expone nada hacia afuera, saltá esta fase y borrá `/contract`, el `TEMPLATE/contract.md` y el agente `e2e-tester` (ver `GETTING-STARTED.md`).
 
-Genera/actualiza `specs/NNN-slug/contract.md` desde `TEMPLATE/contract.md`: la forma de la interfaz (firmas, campos, tipos, errores, estados, autorización, ¿migración de esquema/datos?). Status `proposed` hasta implementar y verificar, momento en el que pasa a `shipped` con evidencia `archivo:línea`.
+Genera/actualiza `specs/NNN-slug/contract.md` desde `TEMPLATE/contract.md`: la forma de la interfaz (firmas, campos, tipos, errores, estados, autorización, ¿migración de esquema/datos?). Status `proposed` hasta implementar y verificar, momento en el que pasa a `shipped` con su §8 en una línea (`{{SPEC_TEST_COMMAND}}` en verde). Cada respuesta a un `[VERIFICAR]` se escribe como regla en §5, no como pregunta cerrada.
 
 ### 1. `/spec` — QUÉ y POR QUÉ (con Fase 0 y V&V de requisitos)
-Arranca con la **Fase 0 — investigación / des-ambiguación del pedido**: el `requirements-analyst` explora lo que ya existe, lista supuestos y ambigüedades del pedido y los resuelve con vos *antes* de redactar. Después genera `spec.md` —que incluye el **§3 Análisis del problema** (descomposición + modelo conceptual + impacto, el puente entre el QUÉ y el CÓMO antes de diseñar)— y **pregunta hasta que no quede ningún `[VERIFICAR]`**. Acá nacen los **criterios de aceptación**: afirmaciones verificables, true/false, no objetivos vagos. Antes de aprobar, el `requirements-reviewer` corre el **test de ambigüedad** (la V&V de requisitos): audita la spec buscando ambigüedad, supuestos ocultos, criterios no testeables y casos faltantes — el autor no se valida a sí mismo. No se escribe código. Cuando se cumplen los **criterios de salida** de la spec → `approved`, y se registra la fila en el `INDEX.md`.
+Arranca con la **Fase 0 — investigación / des-ambiguación del pedido**: el `requirements-analyst` explora lo que ya existe, lista supuestos y ambigüedades del pedido y los resuelve con vos *antes* de redactar. Después genera `spec.md` —que incluye el **§3 Análisis del problema** (descomposición + modelo conceptual + impacto, el puente entre el QUÉ y el CÓMO antes de diseñar)— y **pregunta hasta que no quede ningún `[VERIFICAR]`** (cada respuesta se escribe como regla en §2 o como criterio, no como pregunta cerrada). Acá nacen los **criterios de aceptación**: afirmaciones verificables, true/false, cada una citable por un test — no objetivos vagos. Antes de aprobar, el `requirements-reviewer` corre el **test de ambigüedad** (la V&V de requisitos): audita la spec buscando ambigüedad, supuestos ocultos, criterios no testeables y casos faltantes — el autor no se valida a sí mismo. No se escribe código. Cuando se cumplen los **criterios de salida** de la spec → `approved`, y se registra la fila en el `INDEX.md`.
 
 ### 2. Clarify (opcional, vía `/spec` re-corrida)
 Si quedaron preguntas abiertas, se resuelven antes de planear. Sin ningún `[VERIFICAR]` pendiente → la spec pasa a `approved`. *(No existe un comando `/clarify`; es simplemente una re-corrida de `/spec` sobre la spec existente.)*
 
 ### 3. `/plan` — CÓMO
-Genera `plan.md`: el enfoque técnico, qué se **reutiliza** (no duplicar lo que ya existe), los cambios archivo por archivo, los riesgos. Versionado. Lo aprobás vos.
+Genera `plan.md`: el enfoque técnico, qué se **reutiliza** (no duplicar lo que ya existe), los cambios archivo por archivo, los riesgos. Versionado. Lo aprobás vos. Es andamio: se borra al cerrar, así que lo que tenga que sobrevivir (una regla, una decisión) se escribe en `spec.md` o `contract.md`.
 
 ### 4. `/tasks` — descomposición
-`tasks.md`: una checklist atómica donde cada tarea está atada a un criterio de aceptación (columna "Cubre AC"). Incluye las tareas de test obligatorias. Corre en el hilo principal, sin agente.
+`tasks.md`: una checklist atómica donde cada tarea está atada a un criterio de aceptación (columna "Cubre AC"). Incluye las tareas de test obligatorias, cada una con el ancla `Spec`/`AC` que va a llevar el test (`CONSTITUTION.md §5`). Corre en el hilo principal, sin agente. Se borra al cerrar.
 
 ### 5. `/analyze` — consistencia (antes de codear)
 ¿Cada criterio de aceptación tiene tareas que lo cubren? ¿El plan respeta el `contract.md` (si existe) y la `CONSTITUTION.md`? ¿Hay scope creep? Se corrige spec/plan/tasks **antes** de implementar, que es donde corregir es barato.
@@ -99,7 +114,7 @@ Genera `plan.md`: el enfoque técnico, qué se **reutiliza** (no duplicar lo que
 Se ejecutan las tareas siguiendo `AGENTS.md` + `CLAUDE.md` + `CONSTITUTION.md`. **Se marca cada tarea en `tasks.md` al completarla** (no todas juntas al final): el `tasks.md` es el estado real del trabajo.
 
 ### 7. `/verify` — Definition of Done
-Recorre **cada criterio de aceptación** con evidencia (`archivo:línea` y/o comportamiento en runtime). Corre los gates del proyecto: `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}` (y `e2e-tester` si hay contrato). Con todos los AC en ✅ → `status: done`; si hay contrato, pasa a `shipped`. Actualiza el `INDEX.md`.
+Recorre **cada criterio de aceptación** contra los tests que lo citan (y el comportamiento en runtime con `e2e-tester` si es de punta a punta). Corre los gates del proyecto: `{{BUILD_COMMAND}}`, `{{SPEC_TEST_COMMAND}}` en verde y ningún criterio sin test que lo cite. Con todos los AC en ✅ → `status: done`; si hay contrato, pasa a `shipped` con su §8 en una línea. Después **compacta la spec a la forma mínima** (`spec-sanitize NNN --cierre`: borra `plan.md`/`tasks.md` y el andamio de la spec, reescribe las decisiones como reglas, conserva los rótulos citados) y actualiza el `INDEX.md`.
 
 ---
 
@@ -135,16 +150,30 @@ specs/
   TEMPLATE/
     spec.md · plan.md · tasks.md
     contract.md        ← OPCIONAL — solo si tu proyecto expone una interfaz
-  000-EXAMPLE-feature/ ← ejemplo lleno read-only (borralo cuando entiendas el flujo)
+  000-EXAMPLE-abierta/ ← ejemplo read-only: la feature a mitad de construcción (los 4 artefactos llenos)
+  000-EXAMPLE-cerrada/ ← ejemplo read-only: la MISMA feature después de /verify (forma mínima)
   NNN-mi-feature/
-    spec.md · plan.md · tasks.md · contract.md (opcional)
+    spec.md · contract.md (opcional)      ← lo que queda al cerrar
+    plan.md · tasks.md                    ← solo mientras se construye
 ```
 
-Convención de carpeta de feature: `NNN-slug` (`NNN` = 3 dígitos con ceros a la izquierda, próximo libre del `INDEX.md`; `slug` = kebab-case corto).
+Convención de carpeta de feature: `NNN-slug` (`NNN` = 3 dígitos con ceros a la izquierda, próximo libre del `INDEX.md`; `slug` = kebab-case corto). Los dos ejemplos comparten el `000` a propósito —son la misma feature en dos momentos— y se borran juntos cuando entiendas el flujo.
 
 Ver `CONSTITUTION.md` para las reglas que aplican siempre y `GUIA-EQUIPO-SDD.md` para el paso a paso.
 
-> **Gate determinístico (implementado).** El validador `/validate-specs` (`.claude/skills/validate-specs/`, runners `.ps1`/`.sh`) chequea en frío los gates de proceso objetivos —`[VERIFICAR]` abiertos en specs `approved`/`done`, `approved-by:` faltante, criterios sin tildar, `contract:` roto, fila en `INDEX.md`— y corre en CI en cada PR (`.github/workflows/sdd-validation.yml`). Lo que requiere criterio (cobertura criterio↔tarea, calidad del criterio) sigue en `/analyze` + el ingeniero.
+## Cómo se hace cumplir
+
+Cada regla del ciclo de vida tiene un mecanismo; no depende de que alguien se acuerde.
+
+| Regla | Mecanismo | Cuándo |
+|---|---|---|
+| Gates objetivos de fase (`[VERIFICAR]`, `approved-by:`, criterios tildados, `contract:`, fila en INDEX) | `/validate-specs` (`.claude/skills/validate-specs/`) | a mano y en CI en cada PR |
+| Una spec `done` no carga proceso | `/validate-specs` (WARN) + skill `spec-sanitize NNN --cierre` | `/verify` |
+| Cada criterio anclado a un test, y en verde | `{{SPEC_TEST_COMMAND}}` + el `validator` greppea el ancla `Spec`/`AC` | `/verify` |
+| La spec describe el sistema, no su construcción | hook `spec-authoring`: deniega anclas `archivo:línea`, changelogs fechados y conteos de corrida; avisa por tamaño | al escribir `spec.md`/`contract.md` |
+| La historia no se linkea | hook `block-history-links` + `compact-spec` lista los links que quedarían colgando | al escribir cualquier archivo · al cerrar |
+
+Dos reglas quedan como conducta, porque ningún mecanismo distingue el caso bueno del malo: **no consultar la historia por defecto** (un hook no sabe si el dato hacía falta) y **escribir una decisión como regla o criterio, no como narrativa** (lo revisa el `spec-analyst` en `/analyze`). Lo que requiere criterio (cobertura criterio↔tarea, calidad del criterio) sigue en `/analyze` + el ingeniero.
 
 ---
 
@@ -189,7 +218,7 @@ El outbox de cada consumidor responde "¿qué le falta a este repo de afuera?"; 
 
 Al pasar un `contract.md` a `shipped` (o cambiar uno ya `shipped`):
 
-- [ ] `status: shipped` + sección de evidencia (`archivo:línea`, commit/PR).
+- [ ] `status: shipped` + §8 en una línea: `{{SPEC_TEST_COMMAND}}` en verde. Sin `archivo:línea` ni commits: envejecen y atan el contrato a la historia.
 - [ ] Fila del `INDEX.md` del repo dueño actualizada.
 - [ ] **Por cada path en `consumers:`**: editar la spec consumidora (su `contract:` / los `[VERIFICAR]` que el contrato ahora responde) o, si no tenés ese repo a mano, dejar el aviso como item en el outbox de ese consumidor.
 - [ ] Cerrar los items del outbox del consumidor que este contrato resuelve.

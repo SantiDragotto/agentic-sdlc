@@ -21,4 +21,8 @@ El `status` vive en el frontmatter. Una sola palabra canónica; los matices van 
 
 `tasks.md` no lleva `status` propio: su estado real es el avance de la checklist (cada tarea se tilda al completarla).
 
-> El proceso canónico, los criterios de salida de cada fase y los marcadores (`[VERIFICAR]`, `[IA-DECIDIÓ]`, `{{TOKEN}}`) están en `../README.md`. Para ver cada artefacto **ya completado**, mirá `../000-EXAMPLE-feature/`.
+## Qué queda al cerrar
+
+`plan.md` y `tasks.md` son andamio: **se borran** cuando la spec pasa `/verify`. De `spec.md` quedan §1, §2, §4 y §6; de `contract.md`, la interfaz con su §8 en una línea. El resto (análisis, preguntas, notas, supuestos, pendientes, criterios de salida) sale sin renumerar. Lo hace la skill `spec-sanitize --cierre`; la regla está en `../CONSTITUTION.md §6`. Por eso las notas de cada plantilla dicen qué es durable y qué no: escribí desde el día uno lo durable como regla o criterio.
+
+> El proceso canónico, los criterios de salida de cada fase y los marcadores (`[VERIFICAR]`, `[IA-DECIDIÓ]`, `{{TOKEN}}`) están en `../README.md`. Para ver cada artefacto **ya completado**, mirá `../000-EXAMPLE-abierta/` (a mitad de construcción) y `../000-EXAMPLE-cerrada/` (la misma feature después de `/verify`).

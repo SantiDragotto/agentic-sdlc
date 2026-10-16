@@ -35,16 +35,17 @@ Las cuatro keys (`name`, `description`, `argument-hint`, `allowed-tools`) van en
 
 ## Activos en este repo
 
-Las **4 skills** activas del kit:
+Las **5 skills** activas del kit:
 
 | Skill | Qué hace | Cuándo se dispara |
 |---|---|---|
 | `bug-finder` | Auditoría iterativa exhaustiva del código trabajado, hasta convergencia. | `/bug-finder`, "revisá el código", "buscá bugs", "code review". |
 | `validate-specs` | Gate **determinístico** del proceso SDD (scripts `validate-sdd.{ps1,sh}` + CI). | Antes de aprobar/cerrar una spec, en cada PR, "validá las specs". |
+| `spec-sanitize` | Compacta **una** spec `done` a la forma mínima (`CONSTITUTION.md §6`): borra el proceso con `compact-spec.{ps1,sh}`, reescribe las decisiones como reglas, poda lo que ya dicen el código y los tests. | `/verify` (con `--cierre`), `/spec-sanitize NNN`, "compactá la spec NNN". |
 | `setup` | Onboarding guiado: entrevista al adoptante y llena los 3 archivos obligatorios. | "configurar el kit", "setup del proyecto", `/setup`. |
 | `clarify` | Protocolo de preguntas en CADA fase del SDD (la IA no asume en silencio). | Cualquier fase del flujo, "no asumas", "clarificá". |
 
-> Cada skill vive en `<name>/SKILL.md` (con sus archivos auxiliares si los tiene — p. ej. los runners `validate-sdd.{ps1,sh}` de `validate-specs`). El detalle completo de cada una está en su `SKILL.md`.
+> Cada skill vive en `<name>/SKILL.md` (con sus archivos auxiliares si los tiene — p. ej. los runners `validate-sdd.{ps1,sh}` de `validate-specs` o `compact-spec.{ps1,sh}` de `spec-sanitize`). El detalle completo de cada una está en su `SKILL.md`.
 
 [EJEMPLO — reemplazar] Cuando agregues skills propios a tu repo, sumalos a la tabla de arriba igual que los del kit: una línea por skill (qué hace + cuándo se dispara).
 

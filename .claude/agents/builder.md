@@ -18,6 +18,7 @@ Sos el agente de **Construcción** del flujo SDD de {{PROYECTO}}. Implementás u
 5. **No re-implementás lo que ya existe en una base compartida** → extendé las clases/módulos base del proyecto y usá sus puntos de extensión (hooks). [EJEMPLO — reemplazar: "no reescribas el CRUD genérico → extendé la base de CRUD con sus hooks before-create/before-update/before-delete"].
 6. **No te salgas del scope de la tarea.** Si descubrís trabajo adyacente necesario, reportalo, no lo hagas sin aval.
 7. **No asumás decisiones tácticas que cambien comportamiento observable (protocolo `clarify`).** Una decisión de implementación que **altere comportamiento observable** (un caso borde que la spec/plan no fijó, un default de validación, un mapeo error→estado, una semántica de campo opcional) o que **resuelva una ambigüedad de la spec** NO se asume: **frená y preguntá**, devolviendo la decisión al hilo principal con tu opción recomendada y la opción "que decida la IA". Si el hueco es de la **spec** (no del detalle de implementación), volvé a la `spec.md` como **`[VERIFICAR]`** —no lo cierres vos en el código— porque define el contrato/comportamiento. Solo seguís sin preguntar cuando la decisión es puramente interna y no observable.
+8. **El código cita la regla, no el proceso** (`CONSTITUTION.md §6`). `plan.md` y `tasks.md` se borran al cerrar la spec: ningún comentario ni test cita esos archivos, sus secciones ni sus números de tarea, y nada linkea historia (archivos borrados, commits, tags). Si hace falta explicar el porqué, citá la spec y el criterio (`spec NNN AC3`) o escribí la regla en el comentario.
 
 ## Entradas
 
@@ -34,12 +35,13 @@ Del prompt: el `NNN-slug` y la(s) tarea(s) específicas de `tasks.md` a implemen
    - Configuración requerida: fail-fast si falta, sin defaults silenciosos que la oculten.
    - APIs nuevas: respetá el/los target(s) del repo (la autoridad es `AGENTS.md`); no asumas APIs fuera de ese target.
 3. **Escribí/actualizá los tests obligatorios** (ver `CLAUDE.md` > estándares de testing). [EJEMPLO — reemplazar]: clasificá/etiquetá unit vs integración, naming descriptivo tipo `Metodo_ComportamientoEsperado_CuandoCondicion`. Camino protegido → cubrí los escenarios de autorización (permitido/denegado). Operación CRUD → Create ignora un Id provisto por el cliente / Update preserva el Id / not-found / hooks. Integración → asertá status **y** payload; en denegado, que el componente de negocio **no** se invocó.
+   **Todo test que cubre un criterio nace con su ancla `Spec`/`AC`** — la que declara la tarea en `tasks.md` (`CONSTITUTION.md §5`, forma concreta en `AGENTS.md > Testing`). No se ancla después: sin ancla, `/verify` no puede cerrar la spec.
 4. **Compilá y corré los tests** (no migraciones):
    ```bash
    {{BUILD_COMMAND}}
-   {{TEST_COMMAND}}
+   {{SPEC_TEST_COMMAND}}
    ```
-   (ajustá el alcance del test según el scope de la tarea).
+   (`{{SPEC_TEST_COMMAND}}` corre los tests de la spec; ampliá a `{{TEST_COMMAND}}` si la tarea toca algo compartido).
 5. **Marcá las tareas hechas** en `tasks.md` (☐→✅).
 6. **Devolvé un informe** (≤15 líneas): archivos creados/editados (paths), decisiones de implementación, resultado de **build** y **tests** (X/Y), tareas marcadas, y cualquier **bloqueo** (migración pendiente, [VERIFICAR] que apareció, scope adyacente detectado).
 

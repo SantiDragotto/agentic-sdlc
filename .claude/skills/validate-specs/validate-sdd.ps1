@@ -90,6 +90,14 @@ foreach ($d in $dirs) {
     if ($unchecked.Count -gt 0) {
       $errs.Add("$name/spec.md : status 'done' con $($unchecked.Count) checkbox(es) sin tildar (- [ ])")
     }
+    # Forma minima (CONSTITUTION.md seccion 6): una spec done conserva solo spec.md y contract.md.
+    # Los ejemplos (*-EXAMPLE-*) pueden llevar su README.md explicativo.
+    $proceso = @(Get-ChildItem -LiteralPath $d.FullName -File -Filter '*.md' | Where-Object {
+        @('spec.md', 'contract.md') -notcontains $_.Name -and -not ($name -match '(?i)-EXAMPLE-' -and $_.Name -eq 'README.md')
+      } | ForEach-Object { $_.Name })
+    if ($proceso.Count -gt 0) {
+      $warns.Add("$name : status 'done' con proceso sin borrar ($($proceso -join ', ')) - corre spec-sanitize $(($name -split '-')[0])")
+    }
   }
 
   $iad = Get-IADecideCount $spec

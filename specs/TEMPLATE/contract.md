@@ -16,6 +16,12 @@ approved-date: <YYYY-MM-DD>
 > Lifecycle: `proposed` (en diseño) → `approved` (consensuado, listo para construir) → `shipped` (implementado y desplegable).
 > Las reglas transversales (generación de IDs, autorización, forma del wrapper de respuesta, mapeo error→código de estado) se asumen de `CONSTITUTION.md`; acá solo lo **específico** de la feature.
 
+<!-- Nota del template (se borra al escribir el contrato): describe la interfaz de HOY. Al shipear
+(/verify → spec-sanitize --cierre) no quedan pendientes (§7), notas de proceso ni criterios de salida, y la
+§8 es una sola línea. Una decisión se escribe como regla en §5 (qué + por qué + qué se descartó, sin fecha).
+Sin archivo:línea, commits ni links a historia (CONSTITUTION.md §6). -->
+
+
 ## 1. Resumen
 <2-4 líneas: qué expone esta feature a nivel interfaz y quién la consume.>
 
@@ -52,20 +58,22 @@ approved-date: <YYYY-MM-DD>
 
 ## 5. Reglas de negocio / Invariantes específicas
 - <regla concreta de esta feature: validaciones (→ error de validación), recurso inexistente (→ not-found), efectos colaterales, cascadas… Lo que el consumidor necesita saber para usar la interfaz sin sorpresas.>
+- <decisión que sorprende, escrita como regla: qué + por qué + qué se descartó. Ej.: «quitar un favorito inexistente responde éxito, no not-found: el estado final pedido ya se cumple».>
 
 ## 6. Estados / enums
 <Enums nuevos o estados relevantes con sus valores y significado.>
 
 ## 7. Pendientes / decisiones abiertas
-- [VERIFICAR] <decisión sin cerrar — bloquea pasar de `proposed` a `approved`>
+- [VERIFICAR] <decisión sin cerrar — bloquea pasar de `proposed` a `approved`. Lo resuelto se escribe como regla en §5 y el ítem se borra; al shipear, la sección entera se borra.>
 
-## 8. Evidencia (completar cuando status = shipped)
-<`archivo:línea` del código real que implementa cada operación. Esto vuelve el contrato un as-built verificable y alimenta `/verify`.>
+## 8. Evidencia
+- Tests: `{{SPEC_TEST_COMMAND}}` en verde.
 
-- `<operación …>` → `<archivo>:<línea>`
+<!-- Una sola línea, también al shipear. La evidencia es el test que cita cada criterio (ancla Spec/AC); el
+archivo:línea envejece con el primer refactor y los commits atan el contrato a la historia. -->
 
 ## Criterios de salida (V&V de la interfaz)
-> El ingeniero humano valida esto ANTES de construir contra el contrato.
+> El ingeniero humano valida esto ANTES de construir contra el contrato. Se borra al shipear.
 - [ ] Cada operación declara entrada, salida, autorización y errores.
 - [ ] Consistente con el comportamiento de la spec (sin contradicciones).
 - [ ] **0 `[VERIFICAR]`** sin resolver.

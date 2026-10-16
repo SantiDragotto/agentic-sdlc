@@ -6,7 +6,7 @@ Reglas de comportamiento específicas de Claude para este repo. Los **hechos** a
 
 Para los ítems de abajo, ver **`AGENTS.md`**:
 
-- `## Commands` — `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}`, `{{RUN_COMMAND}}`, `{{MIGRATION_COMMAND}}`
+- `## Commands` — `{{BUILD_COMMAND}}`, `{{TEST_COMMAND}}`, `{{SPEC_TEST_COMMAND}}`, `{{RUN_COMMAND}}`, `{{MIGRATION_COMMAND}}`
 - `## Configuration` — claves de config / `{{SECRETS_FILE}}`
 - `## Architecture` — layout del código, patrón en capas, cross-cutting concerns
 - `## Repo Contracts` — invariantes de ID, target framework, secretos, autorización, estándares de testing
@@ -126,7 +126,8 @@ Esta sección es la **mecánica del flujo** (qué hace cada fase). El **gate de 
 
 - **Un comando por fase** (interfaz interactiva) que delega en **un agente por etapa del flujo**: `/spec` → `requirements-analyst` (Fase 0 + redacción) + `requirements-reviewer` (V&V de requisitos / test de ambigüedad); `/plan` (y `/contract`, OPCIONAL) → `solution-designer`; `/analyze` → `spec-analyst`; `/verify` → `validator` (+ `e2e-tester`, opcional); construcción/implementación → `builder`. `/tasks` corre en el **hilo principal** (sin agente dedicado).
 - **OPCIONAL — fase contrato:** si tu proyecto expone una interfaz que otros consumen (API, librería, CLI, schema/formato), el back/dueño produce el `contract.md` (interfaz/DTOs/auth/estados) en `specs/NNN-*/` con lifecycle `proposed`→`approved`→`shipped`. Si tu proyecto no expone una interfaz pública, ignorá `/contract`, `contract.md` y `e2e-tester` (ver `GETTING-STARTED.md` para borrarlos).
-- **Nada es "done" sin `/verify`** (cada criterio de aceptación con evidencia). Al cerrar: `INDEX.md` actualizado, y `contract.md`→`shipped` si aplica.
+- **Nada es "done" sin `/verify`** (cada criterio de aceptación citado por un test en verde — ancla `Spec`/`AC`, `CONSTITUTION.md §5`). Al cerrar: la spec se **compacta a la forma mínima** (`spec-sanitize NNN --cierre`: se borran `plan.md`/`tasks.md` y el andamio, las decisiones quedan como reglas), `INDEX.md` actualizado, y `contract.md`→`shipped` con su §8 en una línea si aplica.
+- **Una spec describe el sistema, no su construcción** (`CONSTITUTION.md §6`): sin diario, preguntas tachadas, conteos de corrida ni `archivo:línea`; una decisión se escribe como regla o criterio. El código cita la regla o el criterio, nunca `plan.md`/`tasks.md`. La historia vive en git y **no se linkea** desde ningún archivo vivo.
 - Las **reglas duras del repo** (IDs, auth, persistencia, migraciones, secretos, tests) **se asumen** en cada fase — no se re-declaran en cada spec; la autoridad sigue siendo este archivo + `AGENTS.md`.
 
 ## Tooling Index
@@ -145,14 +146,19 @@ Herramientas disponibles en este repo. Preferí invocarlas antes que reproducir 
 | agent | `e2e-tester` | Active (OPCIONAL) | Valida lógica end-to-end contra la interfaz pública corriendo (API/CLI/etc.). Solo si tu proyecto expone una interfaz que otros consumen. Loguea cada escenario bajo el directorio configurado (`{{LOG_DIR}}`, ej. `.claude/agents/e2e-tester/test-runs/`). |
 | skill | `/bug-finder` | Active | Auditoría iterativa exhaustiva del código trabajado. Ciclos de revisión hasta convergencia (2 loops limpios consecutivos, máx 8). Invocar con `/bug-finder`, "revisá el código", "buscá bugs". |
 | skill | `/validate-specs` | Active | Gate **determinístico** del proceso SDD: corre `validate-sdd.{ps1,sh}` y falla si una spec avanzó de fase con `[VERIFICAR]` abiertos, sin `approved-by:`, o con criterios sin tildar; chequea cross-refs y fila en INDEX. Corre en CI (`.github/workflows/sdd-validation.yml`). Invocar antes de aprobar/cerrar una spec o con "validá las specs". |
+| skill | `/spec-sanitize` | Active | Compacta **una** spec `done` a la forma mínima (`CONSTITUTION.md §6`): borra el proceso (`plan.md`, `tasks.md`, andamio de la spec) con `compact-spec.{ps1,sh}`, reescribe las decisiones como reglas y, con los AC anclados, poda lo que ya dicen el código y los tests. `/verify` la corre con `--cierre`; sin flag, compacta el stock de specs viejas de a una. |
 | skill | `/setup` | Active | Onboarding **guiado**: entrevista por categorías (stack, comandos, arquitectura, repo contracts, testing, secretos) y llena los 3 archivos obligatorios (`AGENTS.md`, `CONSTITUTION.md §4`, convenciones de `CLAUDE.md`) confirmando cada bloque con el humano. Alternativa guiada al llenado manual de `GETTING-STARTED.md`. No escribe código. |
 | skill | `/clarify` | Active | Protocolo de preguntas que se corre en CADA fase (spec, plan, tasks, construcción, verify) para que la IA no asuma en silencio: surface como preguntas todo lo que asumiría, agrupado por categoría y con un default sugerido; el dev contesta, elige, o delega. Delegado → `[IA-DECIDIÓ]` (registrado, no bloquea); sin resolver → `[VERIFICAR]` (bloquea `approved`). Lo invocan los comandos y los agentes. |
 | hook | `block-forbidden-command` | Active | `PreToolUse` Bash — bloquea un comando prohibido (ej. `{{MIGRATION_COMMAND}}`). Defensa en profundidad del repo contract de migraciones. Implementación: `.claude/hooks/block-forbidden-command.{ps1,sh}`. |
 | hook | `block-protected-file` | Active | `PreToolUse` Edit/Write — bloquea modificaciones a un archivo protegido (ej. `{{SECRETS_FILE}}`). Defensa en profundidad del repo contract de secretos. Implementación: `.claude/hooks/block-protected-file.{ps1,sh}`. |
+| hook | `block-history-links` | Active | `PreToolUse` Edit/Write — deniega agregar un link a historia (archivo borrado, commit, tag) en un archivo vivo, y en código una cita a `plan.md`/`tasks.md`. Defiende `CONSTITUTION.md §6`. Implementación: `.claude/hooks/block-history-links.{ps1,sh}`. |
+| hook | `spec-authoring` | Active | `PreToolUse` + `PostToolUse` Edit/Write sobre `specs/NNN-*/spec.md`/`contract.md` — deniega agregar `archivo:línea`, changelogs fechados y conteos de corrida; avisa si el archivo pasa el presupuesto de tamaño. Defiende `CONSTITUTION.md §6`. Implementación: `.claude/hooks/spec-authoring.{ps1,sh}`. |
 
 Las convenciones y el cómo-agregar-cada-tipo viven en `.claude/{agents,skills,commands,hooks,rules}/README.md`.
 
 ## Working Preferences
 
 - **No releas archivos** ya leídos en esta sesión salvo que el usuario lo pida. Minimizá tool calls y trabajá con lo que está en contexto.
+- **La historia no se consulta por defecto**, ni para orientarte ni por las dudas: una spec cerrada es `spec.md` + `contract.md`, y con el árbol vivo (spec, contrato, código) alcanza. Solo cuando ese dato hace falta de verdad, git a secas (`git log --diff-filter=D --name-only -- specs/NNN-*`, `git show <sha>^:<ruta>`); lo que leas no se linkea (`CONSTITUTION.md §6`): si importa, se reescribe como regla viva.
+- **Barridos de specs** (compactar el stock, reescrituras mecánicas): de a una spec por invocación, nunca un lote en un solo diff.
 - **Mantené el foco en el scope que el dev pidió.** No agregues tests ni cambios fuera de ese scope salvo que se pida explícitamente.
